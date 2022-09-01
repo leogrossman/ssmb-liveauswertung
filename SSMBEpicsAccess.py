@@ -202,8 +202,8 @@ class SSMBEpics:
     '''
     Wrapper class to manage the EPICS access for the SSMBLiveEvaluation application
     '''
-    def __init__(self, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0, harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0):
-        self.PV = SSMBPVs() # PV access object
+    def __init__(self, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0, harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0, demo_mode=False):
+        self.PV = SSMBPVs(demo_mode=demo_mode) # PV access object
         self.data_queue = queue.Queue() # create queue for data input to be written to EPICS
         self.set_turn_parameters(harm1highturn, harm1lowturnpeak, harm1highturnpeak, harm2highturn, harm2lowturnpeak, harm2highturnpeak)
         self.go = False
