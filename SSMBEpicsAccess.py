@@ -18,8 +18,9 @@ class SSMBPVs:
     '''
     class to access EPICS variables
     '''
-    def __init__(self):
-        if not demo:
+    def __init__(self, demo_mode = False):
+        self.__demo = demo or demo_mode
+        if not self.__demo:
             ### RF frequency readback PV to get bunch spacing
             self.pvfrf = PV('MCLKHGP:rdFrq')
             
@@ -96,7 +97,7 @@ class SSMBPVs:
         None.
 
         """
-        if not demo:
+        if not self.__demo:
             self.pvharm1turn1.put(peakdata[f'harm1_turn1_peak{harm1lowturnpeak}'])
             self.pvharm1turn1avg.put(peakdata[f'harm1_turn1_peak{harm1lowturnpeak}_avg'])
             self.pvharm1turn1std.put(peakdata[f'harm1_turn1_peak{harm1lowturnpeak}_std'])
@@ -140,7 +141,7 @@ class SSMBPVs:
         None.
 
         """
-        if not demo:
+        if not self.__demo:
             self.pvharm1turn1peaknr.put(harm1lowturnpeak)
             self.pvharm1turn2peaknr.put(harm1highturnpeak)
             self.pvharm1turn2turnnr.put(harm1highturn)
@@ -158,7 +159,7 @@ class SSMBPVs:
         None.
 
         """
-        if not demo:
+        if not self.__demo:
             self.pvharm1turn1.put(0)
             self.pvharm1turn1avg.put(0)
             self.pvharm1turn1std.put(0)
@@ -192,7 +193,7 @@ class SSMBPVs:
             DESCRIPTION.
 
         """
-        if demo:
+        if self.__demo:
             return None
         else:
             return self.pvfrf.get()

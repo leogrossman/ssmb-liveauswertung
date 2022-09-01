@@ -4,7 +4,7 @@ Created on Wed May 18 10:32:43 2022
 
 @author: Arnold Kruschinski
 """
-# TODO f-strings do not work in python 3.5!!!!
+
 import tkinter as tk
 from tkinter import ttk
 from configparser import ConfigParser
@@ -381,7 +381,7 @@ class SSMBWindow(tk.Frame):
             print(f'Warning: Cannot recover last known data logging file, key "logdest" does not exist in configuration file "{self.__cfg_name}".')
             
         ### Initialize EPICS output module ###
-        self._epics = SSMBEpics()
+        self._epics = SSMBEpics(demo_mode = self.__testing_mode) # if in testing mode, start epics module in demo mode without actual epics access
 
 
     def startup(self):
