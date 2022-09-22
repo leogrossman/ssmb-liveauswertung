@@ -22,7 +22,7 @@ class SSMBPVs:
         self.__demo = demo or demo_mode
         if not self.__demo:
             ### RF frequency readback PV to get bunch spacing
-            self.pvfrf = PV('MCLKHGP:rdFrq')
+            self.pvfrf = PV('MCLKHGP:rdFrq499')
             
             ### Output PV name fragments ###
             IOC_NAME = 'SSMB1ZVP' # TBD
@@ -189,14 +189,14 @@ class SSMBPVs:
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        float
+            the current RF frequency in Hz.
 
         """
         if self.__demo:
             return None
         else:
-            return self.pvfrf.get()
+            return 499e6 + self.pvfrf.get() * 1e3
 
 class SSMBEpics:
     '''
