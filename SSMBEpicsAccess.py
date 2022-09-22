@@ -14,6 +14,12 @@ except ModuleNotFoundError:
     demo = True # no epics module, use demo mode which accepts commands but does nothing
     print('Warning: Could not load PyEPICS module, using demo mode (EPICS access disabled).')
 
+def set_PV(pv, data, key, default=0):
+    try:
+        pv.put(data[key])
+    except KeyError: # no data for the given key, set PV to default
+        pv.put(default)
+
 class SSMBPVs:
     '''
     class to access EPICS variables
@@ -24,7 +30,7 @@ class SSMBPVs:
             ### RF frequency readback PV to get bunch spacing
             self.pvfrf = PV('MCLKHGP:rdFrq499')
             
-            ### Output PV name fragments ###
+            ### PV name fragments ###
             IOC_NAME = 'SSMB1ZVP' # TBD
             SEP1 = ':'
             H1T1 = 'h1t1'
@@ -75,7 +81,7 @@ class SSMBPVs:
 
         Parameters
         ----------
-        peakdata : pandas DataFrame
+        peakdata : dictionary
             containing the new analyzed SSMB data.
         harm1highturn : int, optional
             turn number for the higher turn plot for the first harmonic. The default is 2.
@@ -98,22 +104,22 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            self.pvharm1turn1.put(peakdata[f'harm1_turn1_peak{harm1lowturnpeak}'])
-            self.pvharm1turn1avg.put(peakdata[f'harm1_turn1_peak{harm1lowturnpeak}_avg'])
-            self.pvharm1turn1std.put(peakdata[f'harm1_turn1_peak{harm1lowturnpeak}_std'])
-            self.pvharm1turn2.put(peakdata[f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}'])
-            self.pvharm1turn2avg.put(peakdata[f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}_avg'])
-            self.pvharm1turn2std.put(peakdata[f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}_std'])
+            set_PV(self.pvharm1turn1, peakdata, f'harm1_turn1_peak{harm1lowturnpeak}')
+            set_PV(self.pvharm1turn1avg, peakdata, f'harm1_turn1_peak{harm1lowturnpeak}_avg')
+            set_PV(self.pvharm1turn1std, peakdata, f'harm1_turn1_peak{harm1lowturnpeak}_std')
+            set_PV(self.pvharm1turn2, peakdata, f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}')
+            set_PV(self.pvharm1turn2avg, peakdata, f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}_avg')
+            set_PV(self.pvharm1turn2std, peakdata, f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}_std')
             
-            self.pvharm2turn1.put(peakdata[f'harm2_turn1_peak{harm2lowturnpeak}'])
-            self.pvharm2turn1avg.put(peakdata[f'harm2_turn1_peak{harm2lowturnpeak}_avg'])
-            self.pvharm2turn1std.put(peakdata[f'harm2_turn1_peak{harm2lowturnpeak}_std'])
-            self.pvharm2turn2.put(peakdata[f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}'])
-            self.pvharm2turn2avg.put(peakdata[f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}_avg'])
-            self.pvharm2turn2std.put(peakdata[f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}_std'])
+            set_PV(self.pvharm2turn1, peakdata, f'harm2_turn1_peak{harm2lowturnpeak}')
+            set_PV(self.pvharm2turn1avg, peakdata, f'harm2_turn1_peak{harm2lowturnpeak}_avg')
+            set_PV(self.pvharm2turn1std, peakdata, f'harm2_turn1_peak{harm2lowturnpeak}_std')
+            set_PV(self.pvharm2turn2, peakdata, f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}')
+            set_PV(self.pvharm2turn2avg, peakdata, f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}_avg')
+            set_PV(self.pvharm2turn2std, peakdata, f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}_std')
             
-            self.pvlaserpos.put(peakdata['laser_position'])
-            self.pvlasermax.put(peakdata['laser_maximum'])
+            set_PV(self.pvlaserpos, peakdata, 'laser_position')
+            set_PV(self.pvlasermax, peakdata, 'laser_maximum')
             
     def update_turnparameters(self, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0, harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0):
         """
