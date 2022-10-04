@@ -1,7 +1,7 @@
 To start the SSMB Live Data Evaluation:
 
  1. Make sure the SSMB scope is on
- 2. run "python3 SSMBLiveEvaluation.py" (must run on Python 3.6 or newer)
+ 2. run "python3 SSMBLiveEvaluation.py" (must run on Python 3.6 or newer; on control room computers without python 3.6 one can use "cython3.sif SSMBLiveEvaluation.py")
  3. when the window has opened, the evaluation should run immediately if the scope is acquiring data. Modify configuration as needed.
  
 EPICS variables to which evaluation results are output:
