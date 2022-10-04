@@ -8,6 +8,6 @@ from tkinter import Tk
 from SSMBLiveWindow import SSMBWindow
 
 root = Tk()
-app = SSMBWindow(root)
+app = SSMBWindow(root, plotting=True)
 root.after(100, app.startup)
 root.mainloop()

@@ -30,8 +30,9 @@ class SSMBPVs:
             ### RF frequency readback PV to get bunch spacing
             self.pvfrf = PV('MCLKHGP:rdFrq499')
             
+            basic = True # True: val1..val30, False: proper names
             ### PV name fragments ###
-            IOC_NAME = 'SSMB1ZVP' # TBD
+            IOC_NAME = 'SCOPE1ZULP' # TBD
             SEP1 = ':'
             H1T1 = 'h1t1'
             H1T2 = 'h1t2'
@@ -46,30 +47,57 @@ class SSMBPVs:
             
             ### connect to output PVs ###
             # first harmonic #
-            self.pvharm1turn1 = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_RAW)
-            self.pvharm1turn1avg = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_AVG)
-            self.pvharm1turn1std = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_STD)
-            self.pvharm1turn1peaknr = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + PEAK_NR)
-            self.pvharm1turn2 = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_RAW)
-            self.pvharm1turn2avg = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_AVG)
-            self.pvharm1turn2std = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_STD)
-            self.pvharm1turn2turnnr = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + TURN_NR)
-            self.pvharm1turn2peaknr = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + PEAK_NR)
+            if basic:
+                self.pvharm1turn1 = PV(IOC_NAME + SEP1 + 'val11')
+                self.pvharm1turn1avg = PV(IOC_NAME + SEP1 + 'val12')
+                self.pvharm1turn1std = PV(IOC_NAME + SEP1 + 'val13')
+                self.pvharm1turn1peaknr = PV(IOC_NAME + SEP1 + 'val14')
+                self.pvharm1turn2 = PV(IOC_NAME + SEP1 + 'val15')
+                self.pvharm1turn2avg = PV(IOC_NAME + SEP1 + 'val16')
+                self.pvharm1turn2std = PV(IOC_NAME + SEP1 + 'val17')
+                self.pvharm1turn2turnnr = PV(IOC_NAME + SEP1 + 'val18')
+                self.pvharm1turn2peaknr = PV(IOC_NAME + SEP1 + 'val19')
+                
+            else:
+                self.pvharm1turn1 = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_RAW)
+                self.pvharm1turn1avg = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_AVG)
+                self.pvharm1turn1std = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_STD)
+                self.pvharm1turn1peaknr = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + PEAK_NR)
+                self.pvharm1turn2 = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_RAW)
+                self.pvharm1turn2avg = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_AVG)
+                self.pvharm1turn2std = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_STD)
+                self.pvharm1turn2turnnr = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + TURN_NR)
+                self.pvharm1turn2peaknr = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + PEAK_NR)
             
             # second harmonic #
-            self.pvharm2turn1 = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_RAW)
-            self.pvharm2turn1avg = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_AVG)
-            self.pvharm2turn1std = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_STD)
-            self.pvharm2turn1peaknr = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + PEAK_NR)
-            self.pvharm2turn2 = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_RAW)
-            self.pvharm2turn2avg = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_AVG)
-            self.pvharm2turn2std = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_STD)
-            self.pvharm2turn2turnnr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + TURN_NR)
-            self.pvharm2turn2peaknr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + PEAK_NR)
+            if basic:
+                self.pvharm2turn1 = PV(IOC_NAME + SEP1 + 'val21')
+                self.pvharm2turn1avg = PV(IOC_NAME + SEP1 + 'val22')
+                self.pvharm2turn1std = PV(IOC_NAME + SEP1 + 'val23')
+                self.pvharm2turn1peaknr = PV(IOC_NAME + SEP1 + 'val24')
+                self.pvharm2turn2 = PV(IOC_NAME + SEP1 + 'val25')
+                self.pvharm2turn2avg = PV(IOC_NAME + SEP1 + 'val26')
+                self.pvharm2turn2std = PV(IOC_NAME + SEP1 + 'val27')
+                self.pvharm2turn2turnnr = PV(IOC_NAME + SEP1 + 'val28')
+                self.pvharm2turn2peaknr = PV(IOC_NAME + SEP1 + 'val29')
+            else:
+                self.pvharm2turn1 = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_RAW)
+                self.pvharm2turn1avg = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_AVG)
+                self.pvharm2turn1std = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_STD)
+                self.pvharm2turn1peaknr = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + PEAK_NR)
+                self.pvharm2turn2 = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_RAW)
+                self.pvharm2turn2avg = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_AVG)
+                self.pvharm2turn2std = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_STD)
+                self.pvharm2turn2turnnr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + TURN_NR)
+                self.pvharm2turn2peaknr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + PEAK_NR)
             
             # laser #
-            self.pvlaserpos = PV(IOC_NAME + SEP1 + 'rdLaserPos')
-            self.pvlasermax = PV(IOC_NAME + SEP1 + 'rdLaserAmpl')
+            if basic:
+                self.pvlaserpos = PV(IOC_NAME + SEP1 + 'val01')
+                self.pvlasermax = PV(IOC_NAME + SEP1 + 'val02')                
+            else:
+                self.pvlaserpos = PV(IOC_NAME + SEP1 + 'rdLaserPos')
+                self.pvlasermax = PV(IOC_NAME + SEP1 + 'rdLaserAmpl')
             
             ### clear PVs ###
             self.zero()

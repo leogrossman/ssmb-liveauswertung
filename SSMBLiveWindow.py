@@ -51,9 +51,10 @@ def format_volts(value, significant_digits=3):
 
 class SSMBWindow(tk.Frame):
     
-    def __init__(self, master=None, testing=False):
+    def __init__(self, master=None, testing=False, plotting=True):
         if testing:
             print('Starting SSMB Live Evaluation in TESTING mode!')
+        self.plotting = plotting
         
         tk.Frame.__init__(self, master)
         self.__loop_index = 0
@@ -686,10 +687,11 @@ class SSMBWindow(tk.Frame):
             else:
                 self.__config_centerpos.set('%.1f' % centerpeakpos)
         self.__logging_numsaved.set(analysislength)
-        self._plt.redraw(traceanalyzer,
-                         self.__harm1t2_turn.get(), self.__harm1t1_peak.get(), self.__harm1t2_peak.get(),
-                         self.__harm2t2_turn.get(), self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), centerpeakpos,
-                         timecolumn=self.__column_time, harm1column=self.__column_harm1, harm2column=self.__column_harm2, triggercolumn=self.__column_trigger)
+        if self.plotting
+            self._plt.redraw(traceanalyzer,
+                            self.__harm1t2_turn.get(), self.__harm1t1_peak.get(), self.__harm1t2_peak.get(),
+                            self.__harm2t2_turn.get(), self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), centerpeakpos,
+                            timecolumn=self.__column_time, harm1column=self.__column_harm1, harm2column=self.__column_harm2, triggercolumn=self.__column_trigger)
 
 
     #TODO buttons for changing channel vertical scale?
