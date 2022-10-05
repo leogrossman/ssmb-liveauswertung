@@ -93,11 +93,19 @@ class SSMBWindow(tk.Frame):
         
         self.__frame_config = tk.Frame(self.master, width = 600, height=200, bg=self.__color_config)
         self.__frame_saving = tk.Frame(self.master, width = 600, height=200, bg=self.__color_saving)
-        self.__frame_config.grid(row=2, column=0, padx=10, pady=10, rowspan=3)
-        self.__frame_saving.grid(row=3, column=1, padx=10, pady=10)
+        self.__frame_config.grid(row=3, column=0, padx=10, pady=10, rowspan=3)
+        self.__frame_saving.grid(row=2, column=1, rowspan=2, padx=10, pady=10)
         
         tk.Label(self.__frame_harm1, text='First Harmonic',  relief=tk.RAISED, bd=1, bg=self.__color_harm1, padx=10).grid(row=0, column=0, sticky=tk.W, pady=2)
         tk.Label(self.__frame_harm2, text='Second Harmonic', relief=tk.RAISED, bd=1, bg=self.__color_harm2, padx=10).grid(row=0, column=0, sticky=tk.W, pady=2)
+        
+        ### Temporary Plotting on/off button ###
+        self.__doplottingBtn = tk.Button(self.master, text='Plotting enabled', width=15, command=self.__toggle_plotting)
+        if self.plotting:
+            self.__doplottingBtn.configure(text = 'Plotting enabled', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+        else:
+            self.__doplottingBtn.configure(text = 'Plotting disabled', bg=self.__color_btnred, activebackground=self.__color_btnred)
+        self.__doplottingBtn.grid(row=2, column=0)
         
         ### Initialize plotting module and create graphs ###
         self._plt = SSMBPlotting(self.__frame_harm1, self.__frame_harm2, figsize_overview=(6.8,2), figsize_detail=(2.5,2))
@@ -687,12 +695,21 @@ class SSMBWindow(tk.Frame):
             else:
                 self.__config_centerpos.set('%.1f' % centerpeakpos)
         self.__logging_numsaved.set(analysislength)
-        if self.plotting
+        if self.plotting:
             self._plt.redraw(traceanalyzer,
                             self.__harm1t2_turn.get(), self.__harm1t1_peak.get(), self.__harm1t2_peak.get(),
                             self.__harm2t2_turn.get(), self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), centerpeakpos,
                             timecolumn=self.__column_time, harm1column=self.__column_harm1, harm2column=self.__column_harm2, triggercolumn=self.__column_trigger)
-
+	
+    def __toggle_plotting(self):
+        if self.plotting:
+            self.plotting = False
+            self.__doplottingBtn.configure(text = 'Plotting disabled', bg=self.__color_btnred, activebackground=self.__color_btnred)
+        else:
+            self.plotting = True
+            self.__doplottingBtn.configure(text = 'Plotting enabled', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+			
+	
 
     #TODO buttons for changing channel vertical scale?
     def __acq_run(self):

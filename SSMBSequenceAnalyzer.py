@@ -337,7 +337,7 @@ class SequenceAnalyzer:
                 if self.centerpeak_pos is not None: #then we can do the bunch-by-bunch get_peaks and averaging.                    
                     md.update(currenttrace.get_peaks(t, with_average=True, centerpeak_pos_ns = self.centerpeak_pos, sidepeaks = self.sidepeaks, harmonic = h))
                     bgavgtrace = currenttrace.get_averaged_bg_corrected_trace(t, h)
-                    self.peakdatacache = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True)
+                    self.peakdatacache = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True, sort=True)
                     if len(self.peakdatacache) > self.averaginglength:
                         self.peakdatacache = self.peakdatacache.drop(index=0)
                     #peak0 = md[f'harm{h}_turn{t}_peak0']
@@ -427,7 +427,7 @@ class SequenceAnalyzer:
         self.recent_trace = deepcopy(currenttrace)
         self.recent_peakdata = md.copy()
         if log_peakdata:
-            self.peakdata = pd.concat([self.peakdata, pd.DataFrame(md, index=[0])], ignore_index = True)
+            self.peakdata = pd.concat([self.peakdata, pd.DataFrame(md, index=[0])], ignore_index = True, sort=True)
         
         self.plot_index += 1
         print(f"dataset #{len(self.peakdata)} at {date_time}, {filename} done")

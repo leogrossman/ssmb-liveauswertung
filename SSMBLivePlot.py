@@ -47,15 +47,15 @@ class SSMBPlotting:
         else:
             return self.__canvases_detail[harm-1][turn-1]
     
-    def redraw(self, traceanalzyer, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0,
+    def redraw(self, traceanalyzer, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0,
                harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0, centerpeak_pos=None,
-               timecolumn = 'TIME', harm1column = 'CH3', harm2column = 'CH4', triggercolumn = 'CH2'):
+               timecolumn = 'TIME', harm1column = 'CH3', harm2column = 'CH4', triggercolumn = 'CH2', plotlenOverview = 200, plotlenDetail=200):
         """
         Redraw all plots with new data.
 
         Parameters
         ----------
-        traceanalzyer : SSMBTraceAnalyzer object
+        traceanalyzer : SSMBTraceAnalyzer object
             containing the new SSMB data trace.
         harm1highturn : int, optional
             turn number for the higher turn plot for the first harmonic. The default is 2.
@@ -93,21 +93,24 @@ class SSMBPlotting:
                 ax1 = plt.gca()
                 ax2 = plt.twinx()
                 
-                windowstart, windowend = traceanalzyer.get_window_times()
+                windowstart, windowend = traceanalyzer.get_window_times()
                 ax1.axvspan(windowstart, windowend, color='r', alpha=0.5)
                 if centerpeak_pos is not None:
                     ax1.axvline(windowstart+centerpeak_pos, color='k')
                     
-                windowstart, windowend = traceanalzyer.get_window_times(highturn-1)
+                windowstart, windowend = traceanalyzer.get_window_times(highturn-1)
                 ax1.axvspan(windowstart, windowend, color='r', alpha=0.5)
                 if centerpeak_pos is not None:
                     ax1.axvline(windowstart+centerpeak_pos, color='k')
                 
+                #datalength = len(traceanalyzer.trace)
+                #skipping = datalength//plotlenOverview
+                skipping=1
                 try:
-                    ax2.plot(traceanalzyer.trace[timecolumn]*1e9, traceanalzyer.trace[triggercolumn], 'grey')
+                    ax2.plot(traceanalyzer.trace[timecolumn].loc[::skipping]*1e9, traceanalyzer.trace[triggercolumn].loc[::skipping], 'grey')
                 except KeyError:
                     pass # missing trigger trace, skip it
-                ax1.plot(traceanalzyer.trace[timecolumn]*1e9, traceanalzyer.trace[harm2column if harm==2 else harm1column], 'C2' if harm==2 else 'C0', alpha=0.8)
+                ax1.plot(traceanalyzer.trace[timecolumn].loc[::skipping]*1e9, traceanalyzer.trace[harm2column if harm==2 else harm1column].loc[::skipping], 'C2' if harm==2 else 'C0', alpha=0.8)
                 ax1.set_zorder(1)
                 ax1.patch.set_visible(False)
                 ax1.set_ylabel('raw signal / V')
@@ -124,12 +127,12 @@ class SSMBPlotting:
                 try:
                     plt.figure(fig.number)
                     fig.clear()
-                    windowstart, windowend = traceanalzyer.get_window_times(turn)
+                    windowstart, windowend = traceanalyzer.get_window_times(turn)
                     if centerpeak_pos is not None:
                         plt.axvline(windowstart+centerpeak_pos, color='k')
                         plt.axvline(windowstart+centerpeak_pos+peak*2, color='r', ls='--')
-                    plt.plot(traceanalzyer.get_averaged_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalzyer.get_averaged_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C3' if harm==2 else 'C1')
-                    plt.plot(traceanalzyer.get_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalzyer.get_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C2' if harm==2 else 'C0', alpha=0.8)
+                    plt.plot(traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C3' if harm==2 else 'C1')
+                    plt.plot(traceanalyzer.get_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C2' if harm==2 else 'C0', alpha=0.8)
                     plt.ylabel('corrected signal / V')
                     plt.xlabel('time / ns')
                     plt.grid()
