@@ -7,6 +7,7 @@ Created on Wed May 18 10:32:43 2022
 
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
 from configparser import ConfigParser
 from inspect import signature
 
@@ -739,7 +740,7 @@ class SSMBWindow(tk.Frame):
             print('Warning: Tried to start/stop acquisition, but the program backend has not started!')
         
     def __rawdata_browse(self):
-        browsed = tk.filedialog.askdirectory(parent=self.master, title="Choose a directory for saving raw scope traces", initialdir=self.__rawdata_path.get())
+        browsed = filedialog.askdirectory(parent=self.master, title="Choose a directory for saving raw scope traces", initialdir=self.__rawdata_path.get())
         if type(browsed) is str:
             if len(browsed) > 0:
                 self.__rawdata_path.set(browsed)
@@ -787,7 +788,7 @@ class SSMBWindow(tk.Frame):
         self._analyzer.parameter_queue.put(['reset'])
     
     def __logging_browse(self):
-        browsed = tk.filedialog.asksaveasfilename(parent=self.master, title="Choose a file for saving logged SSMB data", initialfile=self.__logging_path.get(), filetypes=[('HDF5 file','*.hdf5')], defaultextension='.hdf5')
+        browsed = filedialog.asksaveasfilename(parent=self.master, title="Choose a file for saving logged SSMB data", initialfile=self.__logging_path.get(), filetypes=[('HDF5 file','*.hdf5')], defaultextension='.hdf5')
         if type(browsed) is str:
             if len(browsed) > 0:
                 self.__logging_path.set(browsed)
