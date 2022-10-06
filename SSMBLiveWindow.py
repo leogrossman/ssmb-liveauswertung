@@ -11,6 +11,7 @@ from configparser import ConfigParser
 from inspect import signature
 
 import os
+import sys
 import numpy as np
 
 from queue import Empty
@@ -52,8 +53,12 @@ def format_volts(value, significant_digits=3):
 class SSMBWindow(tk.Frame):
     
     def __init__(self, master=None, testing=False, plotting=True):
+        print('This is python version', sys.version)
         if testing:
             print('Starting SSMB Live Evaluation in TESTING mode!')
+        else:
+            print('Starting SSMB Live Evaluation!')            
+            
         self.plotting = plotting
         
         tk.Frame.__init__(self, master)
@@ -84,6 +89,8 @@ class SSMBWindow(tk.Frame):
         ### register validation callbacks ###
         self.__int_validate_callback = (self.master.register(int_validate), '%P')
         self.__float_validate_callback = (self.master.register(float_validate), '%P')
+        
+        print('Building window...')
         
         ### Frames ###
         self.__frame_harm1 = tk.Frame(self.master, width = 600, height=400, bg=self.__color_harm1)
@@ -356,7 +363,7 @@ class SSMBWindow(tk.Frame):
         self.__logging_clearBtn = tk.Button(self.__frame_saving, text='Clear', width=8, command=self.__logging_clear)
         self.__logging_clearBtn.grid(row=8, column=5, sticky=tk.W)
         
-        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data', width=12, command=self.__logging_save)
+        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data (DISABLED)', width=12)#, command=self.__logging_save)
         self.__logging_saveBtn.grid(row=9, column=3, columnspan=2, padx=3, sticky=tk.W)
 
         ### register window closing protocol ###
@@ -747,7 +754,6 @@ class SSMBWindow(tk.Frame):
             else: ### start saving ### first: build path
                 absdir = self.__rawdata_path.get() # get absolute path that has been input
                 reldir = os.path.relpath(absdir, start=self.__scope_mountdir) # get relative path from scope network drive mount point to entered path
-                print(reldir)
                 if reldir.startswith('..'): # this means entered path is above mounting point, cannot be accessed from the scope
                     print("Error: Cannot start saving data, given path is not below the scope's network drive mounting point.")
                     tk.messagebox.showerror("Cannot start saving data", f"Cannot start saving raw scope data, the given path is not relative to the scope's network drive mounting point, which is {self.__scope_mountdir}.")
@@ -762,6 +768,7 @@ class SSMBWindow(tk.Frame):
                         return
                 savedir = self.__scope_mountletter + ':/' + reldir # build absolute path from scope's point of view (mount letter + colon + slash + relative path from mounting point)
                 #TODO catch illegal file names?
+                print('start data saving at', absdir)
                 self._ctrl.control_queue.put(['savestart', savedir, self.__rawdata_name.get()]) # start saving data in this directory with entered filename pattern
         except AttributeError: # catch nonexisting scope control
             print('Warning: Tried to start/stop raw data saving, but the program backend has not started!')

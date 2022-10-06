@@ -276,10 +276,11 @@ class SSMBScopeControl:
         self.scope.write('SAVEON:WAVE:FILEF ' + 'INTERN' if savebinary else 'SPREADSHEET')
         self.scope.write('SAVEON:WAVE:SOURCE ALL')
         self.scope.write('SAVEON:WAVE ON')
-        
-        self.scope.write('SAVEON:TRIG ON') # TODO this does not seem to work...
+        print(f'SCOPE: Start data saving as "{filename}" at {path}')
+        self.scope.write('SAVEON:TRIG ON')
     
     def stop_data_saving(self):
+        print('SCOPE: Stop data saving')
         self.scope.write('SAVEON:TRIG OFF')
     
     def get_data_saving_status(self):
