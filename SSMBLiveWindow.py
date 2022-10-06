@@ -329,9 +329,10 @@ class SSMBWindow(tk.Frame):
         self.__rawdata_nameEtr = tk.Entry(self.__frame_saving, width=22, textvariable=self.__rawdata_name)
         self.__rawdata_nameEtr.grid(row=5, column=3, columnspan=2, padx=3)
         
-        self.__rawdata_numsaved = tk.IntVar(self.master, value=0)
-        self.__rawdata_numsavedEtr = tk.Entry(self.__frame_saving, width=8, justify='right', textvariable=self.__rawdata_numsaved, state='readonly')
-        self.__rawdata_numsavedEtr.grid(row=5, column=5, padx=3)
+        #TODO how can we get the info on number of saved files??
+        # self.__rawdata_numsaved = tk.IntVar(self.master, value=0)
+        # self.__rawdata_numsavedEtr = tk.Entry(self.__frame_saving, width=8, justify='right', textvariable=self.__rawdata_numsaved, state='readonly')
+        # self.__rawdata_numsavedEtr.grid(row=5, column=5, padx=3)
 
         tk.Label(self.__frame_saving, text='Save raw data', bg=self.__color_saving, relief=tk.RAISED).grid(row=3, column=0, sticky=tk.W)        
         tk.Label(self.__frame_saving, text='saved traces', bg=self.__color_saving).grid(row=6, column=5, padx=3, sticky=tk.W)
@@ -339,7 +340,7 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=6, column=3, sticky=tk.W)
         
         self.__rawdata_saveBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__rawdata_save)
-        self.__rawdata_saveBtn.grid(row=5, column=6, padx=3)
+        self.__rawdata_saveBtn.grid(row=5, column=5, padx=3)
         
         tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=7, column=0)
         
@@ -364,7 +365,7 @@ class SSMBWindow(tk.Frame):
         self.__logging_clearBtn = tk.Button(self.__frame_saving, text='Clear', width=8, command=self.__logging_clear)
         self.__logging_clearBtn.grid(row=8, column=5, sticky=tk.W)
         
-        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data (DISABLED)', width=12)#, command=self.__logging_save)
+        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data (DISABLED)', width=20)#, command=self.__logging_save)
         self.__logging_saveBtn.grid(row=9, column=3, columnspan=2, padx=3, sticky=tk.W)
 
         ### register window closing protocol ###
