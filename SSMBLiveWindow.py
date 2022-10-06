@@ -116,7 +116,7 @@ class SSMBWindow(tk.Frame):
             self.__doplottingBtn.configure(text = 'Plotting disabled', bg=self.__color_btnred, activebackground=self.__color_btnred)
         self.__doplottingBtn.grid(row=2, column=0)
         
-        print('Initialize plotting...', end=' ')
+        print('Initialize plotting...')
         ### Initialize plotting module and create graphs ###
         self._plt = SSMBPlotting(self.__frame_harm1, self.__frame_harm2, figsize_overview=(6.8,2), figsize_detail=(2.5,2))
         self._plt.get_canvas(overview=True, harm=1).grid(row=2, column=0, columnspan=6, padx=3, pady=3, sticky=tk.W)
@@ -375,7 +375,7 @@ class SSMBWindow(tk.Frame):
         self.master.protocol("WM_DELETE_WINDOW", self.close)
         
         ### open configuration file for reading ###     
-        print('Read configuration file...', end=' ')
+        print('Read configuration file...')
         self.__cfg_name = 'SSMBLiveAnalysisConfig.ini'
         self._cfg = ConfigParser()
         self._cfg.read(self.__cfg_name) # TODO config file is only found if python is called from the file directory!
@@ -401,10 +401,10 @@ class SSMBWindow(tk.Frame):
             self.__logging_path.set(self._cfg[self.__cfg_key]['logdest'])
         except KeyError:
             print(f'Warning: Cannot recover last known data logging file, key "logdest" does not exist in configuration file "{self.__cfg_name}".')
-        print('done'.)
+        print('done.')
         
         ### Initialize EPICS output module ###
-        print('Initialize EPICS access...', end=' ')
+        print('Initialize EPICS access...')
         self._epics = SSMBEpics(demo_mode = self.__testing_mode) # if in testing mode, start epics module in demo mode without actual epics access
         print('done.')
 
