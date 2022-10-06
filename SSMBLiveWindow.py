@@ -74,12 +74,8 @@ class SSMBWindow(tk.Frame):
         self.__column_laser = 'CH1'
         self.__column_trigger = 'CH2'
         
-        ### configure window ###
-        self.master = master
-        self.master.title('SSMB Live Data Evaluation')
-        self.master.configure(bg='LightSkyBlue1')
-        
         ### color constants ###
+        self.__color_background = 'LightSkyBlue1'
         self.__color_harm1 = 'LightPink1'
         self.__color_harm2 = 'PaleGreen2'
         self.__color_config = 'grey70'
@@ -87,6 +83,11 @@ class SSMBWindow(tk.Frame):
         self.__color_btngreen = 'green3'
         self.__color_btnred = 'firebrick2'
         
+        ### configure window ###
+        self.master = master
+        self.master.title('SSMB Live Data Evaluation')
+        self.master.configure(bg=self.__color_background)
+                
         ### register validation callbacks ###
         self.__int_validate_callback = (self.master.register(int_validate), '%P')
         self.__float_validate_callback = (self.master.register(float_validate), '%P')
@@ -115,6 +116,7 @@ class SSMBWindow(tk.Frame):
             self.__doplottingBtn.configure(text = 'Plotting disabled', bg=self.__color_btnred, activebackground=self.__color_btnred)
         self.__doplottingBtn.grid(row=2, column=0)
         
+        print('Initialize plotting...', end=' ')
         ### Initialize plotting module and create graphs ###
         self._plt = SSMBPlotting(self.__frame_harm1, self.__frame_harm2, figsize_overview=(6.8,2), figsize_detail=(2.5,2))
         self._plt.get_canvas(overview=True, harm=1).grid(row=2, column=0, columnspan=6, padx=3, pady=3, sticky=tk.W)
@@ -123,6 +125,7 @@ class SSMBWindow(tk.Frame):
         self._plt.get_canvas(overview=True, harm=2).grid(row=2, column=0, columnspan=6, padx=3, pady=3, sticky=tk.W)
         self._plt.get_canvas(overview=False, harm=2, turn=1).grid(row=4, column=0, rowspan=8, padx=3, pady=3)
         self._plt.get_canvas(overview=False, harm=2, turn=2).grid(row=4, column=3, rowspan=8, padx=3, pady=3)
+        print('done.')
         
         tk.Label(self.__frame_harm1, text='raw oscilloscope trace',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=1, column=0, sticky=tk.W)
         tk.Label(self.__frame_harm1, text='first turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=0, sticky=tk.W)
@@ -365,13 +368,14 @@ class SSMBWindow(tk.Frame):
         self.__logging_clearBtn = tk.Button(self.__frame_saving, text='Clear', width=8, command=self.__logging_clear)
         self.__logging_clearBtn.grid(row=8, column=5, sticky=tk.W)
         
-        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data (DISABLED)', width=20)#, command=self.__logging_save)
+        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data (disabled)', width=20)#, command=self.__logging_save)
         self.__logging_saveBtn.grid(row=9, column=3, columnspan=2, padx=3, sticky=tk.W)
 
         ### register window closing protocol ###
         self.master.protocol("WM_DELETE_WINDOW", self.close)
         
-        ### open configuration file for reading ###        
+        ### open configuration file for reading ###     
+        print('Read configuration file...', end=' ')
         self.__cfg_name = 'SSMBLiveAnalysisConfig.ini'
         self._cfg = ConfigParser()
         self._cfg.read(self.__cfg_name) # TODO config file is only found if python is called from the file directory!
@@ -397,9 +401,12 @@ class SSMBWindow(tk.Frame):
             self.__logging_path.set(self._cfg[self.__cfg_key]['logdest'])
         except KeyError:
             print(f'Warning: Cannot recover last known data logging file, key "logdest" does not exist in configuration file "{self.__cfg_name}".')
-            
+        print('done'.)
+        
         ### Initialize EPICS output module ###
+        print('Initialize EPICS access...', end=' ')
         self._epics = SSMBEpics(demo_mode = self.__testing_mode) # if in testing mode, start epics module in demo mode without actual epics access
+        print('done.')
 
 
     def startup(self):
@@ -415,6 +422,7 @@ class SSMBWindow(tk.Frame):
                 return
         
         ### read evaluation configuration parameters from config file, parsing datatypes and default values from SequenceAnalyzer annotation ###
+        print('Initialize data analysis...')
         parametersignature = signature(SSMBLiveAnalyzer.SequenceAnalyzer)
         parameters = {}
         for parametername in parametersignature.parameters:
@@ -429,6 +437,7 @@ class SSMBWindow(tk.Frame):
                 print('Warning: SSMBSequenceAnalyzer parameter "%s" with invalid value in configuration file "%s"' % (parametername, self.__cfg_name))
         ### initialize data analysis module ###
         self._analyzer = SSMBLiveAnalyzer.SSMBLiveAnalyzer(self._epics, self.__logging_status, **parameters)
+        print('done.')
         
         ### read initial parameters and update config input elements ###
         # after having written the parameters to the SequenceAnalyzer, now read them back from there to update the front panel elements.
@@ -478,7 +487,6 @@ class SSMBWindow(tk.Frame):
             self.__column_trigger = self._cfg[self.__cfg_key]['trigcolumn_name']
         except KeyError:
             print('Information: Data column name parameter "trigcolumn_name" not in configuration file "%s", using default %s' % (self.__cfg_name, self.__column_trigger))
-
             
         ### connect to scope ###
         try:
