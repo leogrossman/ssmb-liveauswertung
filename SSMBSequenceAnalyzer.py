@@ -203,10 +203,15 @@ class SequenceAnalyzer:
         self.chunk_index = 0
         self.averagecache = ([],[])
         self.peakcache = ([],[])
-        pdcolumns = ['datetime', 'filename', 'chunk_index', 'centerpeak_pos', 'averaging_length_harm1', 'averaging_length_harm2', 'fluctuation_length_harm1', 'fluctuation_length_harm2']
-        self.peakdatacache = pd.DataFrame(columns=pdcolumns)
-        self.peakdata = pd.DataFrame(columns=pdcolumns)
-                                     # define some columns known to exist to fix the order and avoid integer values being converted to float
+		# define some columns known to exist to fix the order and avoid integer values being converted to float:
+        dfcolumns = ['datetime', 'filename', 'chunk_index', 'centerpeak_pos', 'averaging_length_harm1', 'averaging_length_harm2', 'fluctuation_length_harm1', 'fluctuation_length_harm2']
+        #self.peakdatacache = pd.DataFrame(columns=dfcolumns)
+        #self.peakdata = pd.DataFrame(columns=dfcolumns)
+        # there seems to be a bug in old pandas versions that prevents initialization of empty DataFrames with column names only,
+        # we have to do it like this:
+        dfzeros = pd.DataFrame([[0]*len(dfcolumns)], columns=dfcolumns) # initialize DF with one row of zeros
+        self.peakdatacache = dfzeros.drop(0) # drop only row to get empty DF.
+        self.peakdata = dfzeros.drop(0)
 
     def save_peakdata_to_hdf(self, outputfilepath):
         """
