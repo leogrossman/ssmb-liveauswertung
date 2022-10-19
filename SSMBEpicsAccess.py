@@ -19,6 +19,8 @@ def set_PV(pv, data, key, default=0):
         pv.put(data[key])
     except KeyError: # no data for the given key, set PV to default
         pv.put(default)
+    except TypeError: # invalid data, set PV to default
+        pv.put(default)
 
 class SSMBPVs:
     '''
@@ -91,13 +93,17 @@ class SSMBPVs:
                 self.pvharm2turn2turnnr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + TURN_NR)
                 self.pvharm2turn2peaknr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + PEAK_NR)
             
-            # laser #
+            # laser and general parameters#
             if basic:
                 self.pvlaserpos = PV(IOC_NAME + SEP1 + 'val01')
-                self.pvlasermax = PV(IOC_NAME + SEP1 + 'val02')                
+                self.pvlasermax = PV(IOC_NAME + SEP1 + 'val02')
+                self.pvavglen   = PV(IOC_NAME + SEP1 + 'val05')
+                self.pvpeakpos  = PV(IOC_NAME + SEP1 + 'val06')
             else:
                 self.pvlaserpos = PV(IOC_NAME + SEP1 + 'rdLaserPos')
                 self.pvlasermax = PV(IOC_NAME + SEP1 + 'rdLaserAmpl')
+                self.pvavglen   = PV(IOC_NAME + SEP1 + 'rdAvgLen')
+                self.pvpeakpos  = PV(IOC_NAME + SEP1 + 'rdPeakPos')
             
             ### clear PVs ###
             self.zero()
@@ -132,22 +138,24 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            set_PV(self.pvharm1turn1, peakdata, f'harm1_turn1_peak{harm1lowturnpeak}')
-            set_PV(self.pvharm1turn1avg, peakdata, f'harm1_turn1_peak{harm1lowturnpeak}_avg')
-            set_PV(self.pvharm1turn1std, peakdata, f'harm1_turn1_peak{harm1lowturnpeak}_std')
-            set_PV(self.pvharm1turn2, peakdata, f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}')
-            set_PV(self.pvharm1turn2avg, peakdata, f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}_avg')
-            set_PV(self.pvharm1turn2std, peakdata, f'harm1_turn{harm1highturn}_peak{harm1highturnpeak}_std')
+            set_PV(self.pvharm1turn1, peakdata, f'harm1_turn0_peak{harm1lowturnpeak}')
+            set_PV(self.pvharm1turn1avg, peakdata, f'harm1_turn0_peak{harm1lowturnpeak}_avg')
+            set_PV(self.pvharm1turn1std, peakdata, f'harm1_turn0_peak{harm1lowturnpeak}_std')
+            set_PV(self.pvharm1turn2, peakdata, f'harm1_turn{harm1highturn-1}_peak{harm1highturnpeak}')
+            set_PV(self.pvharm1turn2avg, peakdata, f'harm1_turn{harm1highturn-1}_peak{harm1highturnpeak}_avg')
+            set_PV(self.pvharm1turn2std, peakdata, f'harm1_turn{harm1highturn-1}_peak{harm1highturnpeak}_std')
             
-            set_PV(self.pvharm2turn1, peakdata, f'harm2_turn1_peak{harm2lowturnpeak}')
-            set_PV(self.pvharm2turn1avg, peakdata, f'harm2_turn1_peak{harm2lowturnpeak}_avg')
-            set_PV(self.pvharm2turn1std, peakdata, f'harm2_turn1_peak{harm2lowturnpeak}_std')
-            set_PV(self.pvharm2turn2, peakdata, f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}')
-            set_PV(self.pvharm2turn2avg, peakdata, f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}_avg')
-            set_PV(self.pvharm2turn2std, peakdata, f'harm2_turn{harm2highturn}_peak{harm2highturnpeak}_std')
+            set_PV(self.pvharm2turn1, peakdata, f'harm2_turn0_peak{harm2lowturnpeak}')
+            set_PV(self.pvharm2turn1avg, peakdata, f'harm2_turn0_peak{harm2lowturnpeak}_avg')
+            set_PV(self.pvharm2turn1std, peakdata, f'harm2_turn0_peak{harm2lowturnpeak}_std')
+            set_PV(self.pvharm2turn2, peakdata, f'harm2_turn{harm2highturn-1}_peak{harm2highturnpeak}')
+            set_PV(self.pvharm2turn2avg, peakdata, f'harm2_turn{harm2highturn-1}_peak{harm2highturnpeak}_avg')
+            set_PV(self.pvharm2turn2std, peakdata, f'harm2_turn{harm2highturn-1}_peak{harm2highturnpeak}_std')
             
             set_PV(self.pvlaserpos, peakdata, 'laser_position')
             set_PV(self.pvlasermax, peakdata, 'laser_maximum')
+            set_PV(self.pvavglen, peakdata, 'averaging_length_harm1') # TODO there are different avglens for harm1,2 in peakdata, can they really be different?
+            set_PV(self.pvpeakpos, peakdata, 'centerpeak_pos')
             
     def update_turnparameters(self, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0, harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0):
         """
@@ -216,6 +224,8 @@ class SSMBPVs:
             
             self.pvlaserpos.put(0)
             self.pvlaserpos.put(0)
+            self.pvavglen.put(0)
+            self.pvpeakpos.put(0)
         
     def get_frf(self):
         """
@@ -266,3 +276,5 @@ class SSMBEpics:
                 self.PV.update(data, self.harm1highturn, self.harm1lowturnpeak, self.harm1highturnpeak, self.harm2highturn, self.harm2lowturnpeak, self.harm2highturnpeak)
             except queue.Empty:
                 pass # no new data, continue waiting.
+        
+        self.PV.zero() # before quitting, set all PVs to zero
