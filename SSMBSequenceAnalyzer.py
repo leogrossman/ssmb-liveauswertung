@@ -203,7 +203,7 @@ class SequenceAnalyzer:
         self.chunk_index = 0
         self.averagecache = ([],[])
         self.peakcache = ([],[])
-		# define some columns known to exist to fix the order and avoid integer values being converted to float:
+        # define some columns known to exist to fix the order and avoid integer values being converted to float:
         dfcolumns = ['datetime', 'filename', 'chunk_index', 'centerpeak_pos', 'averaging_length_harm1', 'averaging_length_harm2', 'fluctuation_length_harm1', 'fluctuation_length_harm2']
         self.peakdatacache = pd.DataFrame(columns=dfcolumns)
         self.peakdata = pd.DataFrame(columns=dfcolumns)
@@ -249,7 +249,7 @@ class SequenceAnalyzer:
         None.
         """
         try:
-			# Read data directly or data from file into TraceAnalyzer for processing.
+            # Read data directly or data from file into TraceAnalyzer for processing.
             currenttrace = TraceAnalyzer(data = data, filepath = filepath, windowwidth_ns=self.windowwidth, windowcenter_ns = self.windowcenter,
                                          frf=frf, timecolumnname=self.timecolumn, harm1columnname = self.harm1column, harm2columnname = self.harm2column, lasercolumnname = self.lasercolumn,
                                          invertharm1 = self.invertharm1, invertharm2 = self.invertharm2, invertlaser = self.invertlaser)
@@ -293,7 +293,7 @@ class SequenceAnalyzer:
         if len(self.averagecache[self.harm_for_centerpeak-1]) > self.averaginglength-2: # if we have reached the full averaging depth:
             if self.centerpeak_pos is None or self.centerpeak_determination_continuous: # if there is no centerpeak set yet or continuous automatic determination is active:
                 try:
-					# try to find the new centerpeak position (highest peak in averaged trace for the configured harmonic and turn window)
+                    # try to find the new centerpeak position (highest peak in averaged trace for the configured harmonic and turn window)
                     bgavgtrace_c = currenttrace.get_averaged_bg_corrected_trace(self.turn_for_centerpeak, harmonic=self.harm_for_centerpeak)
                     centerpeakmax = currenttrace.get_max_peak(self.turn_for_centerpeak, average=True, harmonic=self.harm_for_centerpeak)
                     centerpeakmaxpos = bgavgtrace_c.index[bgavgtrace_c[self.harm2column if self.harm_for_centerpeak==2 else self.harm1column] == centerpeakmax][0]
@@ -331,7 +331,6 @@ class SequenceAnalyzer:
             datacolumn = self.harm2column if h == 2 else self.harm1column
             
             bgtraces = []
-            #peak0list = []
             
             md.update({f'averaging_length_harm{h}': len(self.averagecache[h-1])+1})
             md.update({f'fluctuation_length_harm{h}': len(self.peakdatacache)+1})
@@ -350,20 +349,15 @@ class SequenceAnalyzer:
                 bgtraces.append(bgtrace)
                 
                 if self.centerpeak_pos is not None: #then we can do the bunch-by-bunch get_peaks and averaging.
-					# get peak heights from TraceAnalyzer:                
+                    # get peak heights from TraceAnalyzer:
                     md.update(currenttrace.get_peaks(t, with_average=True, centerpeak_pos_ns = self.centerpeak_pos, sidepeaks = self.sidepeaks, harmonic = h))
                     # append peak heights to peakdatacache for fluctuation calculation:
-                    # TODO HERE WE ARE IN HARMONIC AND TURN LOOPS BUT THERE IS ONLY A SINGLE PEAKCACHE! THIS CANNOT BE CORRECT!
-                    self.peakdatacache = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True, sort=True)
-                    # remove excess elements:
-                    peaklendiff = len(self.peakdatacache) - self.averaginglength
-                    if peaklendiff > 0:
-                        self.peakdatacache = self.peakdatacache.drop(index=range(peaklendiff))
+                    peakdata_fluct = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True)#, sort=True)
                     
                     # calculate peak height flucuation during the last averaginglength:
                     for p in range(-self.sidepeaks, self.sidepeaks+1):
                         try:
-                            md.update({f'harm{h}_turn{t}_peak{p}_std': self.peakdatacache[f'harm{h}_turn{t}_peak{p}'].std(ddof=1)})
+                            md.update({f'harm{h}_turn{t}_peak{p}_std': peakdata_fluct[f'harm{h}_turn{t}_peak{p}'].std(ddof=1)})
                         except KeyError:
                             pass # this happens when the data column is not present, skip fluctuation calculation.
                     
@@ -418,7 +412,7 @@ class SequenceAnalyzer:
                     plt2.set_title(f'harm {h}, turn {t+1}, avg')
             
             # append current data to averagecache for next sample averaging
-            self.averagecache[h-1].append(bgtraces)            
+            self.averagecache[h-1].append(bgtraces)
             # averagecache should consist of averaginglength-1 entries (as during calculating the avg. for the next sample the new data is also used)
             # delete excess elements, oldest first
             avglendiff = len(self.averagecache[h-1]) - (self.averaginglength-1)
@@ -438,7 +432,15 @@ class SequenceAnalyzer:
         self.recent_trace = deepcopy(currenttrace)
         self.recent_peakdata = md.copy()
         if log_peakdata:
-            self.peakdata = pd.concat([self.peakdata, pd.DataFrame(md, index=[0])], ignore_index = True, sort=True)
+            self.peakdata = pd.concat([self.peakdata, pd.DataFrame(md, index=[0])], ignore_index = True)#, sort=True)
+        
+        # append peakdata output to peakcache for next flucuation calculation
+        self.peakdatacache = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True)#, sort=True)
+        # peakdatacache should consist of averaginglength-1 entries (as during calculating the fluctuation for the next sample the new data is also used)
+        # delete excess elements, oldest first
+        peaklendiff = len(self.peakdatacache) - (self.averaginglength-1)
+        if peaklendiff > 0:
+            self.peakdatacache = self.peakdatacache.drop(index=range(peaklendiff))
         
         self.plot_index += 1
         print(f"dataset #{len(self.peakdata)} at {date_time}, {filename} done")
