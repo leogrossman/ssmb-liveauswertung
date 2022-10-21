@@ -223,7 +223,7 @@ class SSMBPVs:
             self.pvharm2turn2turnnr.put(0)
             
             self.pvlaserpos.put(0)
-            self.pvlaserpos.put(0)
+            self.pvlasermax.put(0)
             self.pvavglen.put(0)
             self.pvpeakpos.put(0)
         

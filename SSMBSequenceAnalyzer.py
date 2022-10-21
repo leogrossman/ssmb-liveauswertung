@@ -249,15 +249,18 @@ class SequenceAnalyzer:
         None.
         """
         try:
+			# Read data directly or data from file into TraceAnalyzer for processing.
             currenttrace = TraceAnalyzer(data = data, filepath = filepath, windowwidth_ns=self.windowwidth, windowcenter_ns = self.windowcenter,
                                          frf=frf, timecolumnname=self.timecolumn, harm1columnname = self.harm1column, harm2columnname = self.harm2column, lasercolumnname = self.lasercolumn,
                                          invertharm1 = self.invertharm1, invertharm2 = self.invertharm2, invertlaser = self.invertlaser)
+            # Do background correction on the data.
             currenttrace.do_bg_correct(maxturns = self.maxturns, fitorder = self.fitorder, filtering=self.filtering)
-        except (RuntimeError, FileNotFoundError) as e:
+        except (RuntimeError, FileNotFoundError) as e: # These errors are raised by TraceAnalyzer if the data could not be found or properly read, in this case nothing can be done with the current data set.
             print("Skipped dataset at", date_time, filepath)
             print("because:", e)
             return
         
+        # Determine timestamp of the current data: Extract from Filename and file modification time, or use current time for direct data transfer.
         modtime = None
         if date_time is not None:
             currentdatetime = date_time
@@ -271,6 +274,7 @@ class SequenceAnalyzer:
         else:
             currentdatetime = datetime.now()
         
+        # compare the horizontal axis of the current and last dataset. If there is a differece, we cannot correlate the time axis and have to restart averaging and centerpeak determination, if active.
         if not currenttrace.compare_horizontal_info(*self.prev_horizontal_info) or currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
             # reset the averaging, reset the automatic centerpeak position and increment the chunk_index,
             # if either the horizontal scale has changed or the last trace is more than X seconds old
@@ -284,10 +288,12 @@ class SequenceAnalyzer:
         self.prev_horizontal_info = currenttrace.get_horizontal_info()
         self.prev_datetime = currentdatetime
         
+        # Perform averaging on the data with the previous datasets from the cache
         currenttrace.do_averaging(self.averagecache)
-        if len(self.averagecache[self.harm_for_centerpeak-1]) > self.averaginglength-2:    
-            if self.centerpeak_pos is None or self.centerpeak_determination_continuous:
+        if len(self.averagecache[self.harm_for_centerpeak-1]) > self.averaginglength-2: # if we have reached the full averaging depth:
+            if self.centerpeak_pos is None or self.centerpeak_determination_continuous: # if there is no centerpeak set yet or continuous automatic determination is active:
                 try:
+					# try to find the new centerpeak position (highest peak in averaged trace for the configured harmonic and turn window)
                     bgavgtrace_c = currenttrace.get_averaged_bg_corrected_trace(self.turn_for_centerpeak, harmonic=self.harm_for_centerpeak)
                     centerpeakmax = currenttrace.get_max_peak(self.turn_for_centerpeak, average=True, harmonic=self.harm_for_centerpeak)
                     centerpeakmaxpos = bgavgtrace_c.index[bgavgtrace_c[self.harm2column if self.harm_for_centerpeak==2 else self.harm1column] == centerpeakmax][0]
@@ -296,7 +302,8 @@ class SequenceAnalyzer:
                     print("Warning: Automatic centerpeak determination failed: No data for specified turn")
                 except TypeError: # this happens if there are no bgavgtraces available at all either if there is no data for the column or bg correction or averaging have not been performed yet
                     print("Warning: Automatic centerpeak determination failed: No data for specified harmonic")
-
+        
+        # determine filename for logging
         if filepath is not None:
             if type(filepath) is str:
                 filename = filepath.split('/')[-1]
@@ -304,13 +311,15 @@ class SequenceAnalyzer:
                 filename = ';'.join(sorted([f.split('/')[-1] for f in filepath], key = util.extractChannelNameFromDataFilename))
         else:
             filename = 'direct data transfer'
-            
+        
+        # Determine laser position and setup output dictionary
         lasermax, laserpos = currenttrace.get_laser_maximum(self.laserthreshold)
         md = dict(datetime=currentdatetime, filename=filename, chunk_index=self.chunk_index, centerpeak_pos = self.centerpeak_pos, laser_maximum=lasermax, laser_position=laserpos)
         if modtime is not None:
             md.update({'modtime': modtime})
-        
-        #for h in range(1,maxharmonic+1):
+            
+        # loop over harmonic (1 and 2)
+        # for h in range(1,maxharmonic+1):
         for h in range(1,3):
             
             if not currenttrace.harmonic_exists(h):
@@ -340,31 +349,23 @@ class SequenceAnalyzer:
                     continue       # ==> skip this turn
                 bgtraces.append(bgtrace)
                 
-                if self.centerpeak_pos is not None: #then we can do the bunch-by-bunch get_peaks and averaging.                    
+                if self.centerpeak_pos is not None: #then we can do the bunch-by-bunch get_peaks and averaging.
+					# get peak heights from TraceAnalyzer:                
                     md.update(currenttrace.get_peaks(t, with_average=True, centerpeak_pos_ns = self.centerpeak_pos, sidepeaks = self.sidepeaks, harmonic = h))
-                    bgavgtrace = currenttrace.get_averaged_bg_corrected_trace(t, h)
+                    # append peak heights to peakdatacache for fluctuation calculation:
+                    # TODO HERE WE ARE IN HARMONIC AND TURN LOOPS BUT THERE IS ONLY A SINGLE PEAKCACHE! THIS CANNOT BE CORRECT!
                     self.peakdatacache = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True, sort=True)
-                    if len(self.peakdatacache) > self.averaginglength:
-                        self.peakdatacache = self.peakdatacache.drop(index=0)
-                    #peak0 = md[f'harm{h}_turn{t}_peak0']
-                    #peak0list.append(peak0)
+                    # remove excess elements:
+                    peaklendiff = len(self.peakdatacache) - self.averaginglength
+                    if peaklendiff > 0:
+                        self.peakdatacache = self.peakdatacache.drop(index=range(peaklendiff))
+                    
+                    # calculate peak height flucuation during the last averaginglength:
                     for p in range(-self.sidepeaks, self.sidepeaks+1):
                         try:
                             md.update({f'harm{h}_turn{t}_peak{p}_std': self.peakdatacache[f'harm{h}_turn{t}_peak{p}'].std(ddof=1)})
                         except KeyError:
                             pass # this happens when the data column is not present, skip fluctuation calculation.
-                    #if len(self.peakcache[h-1]) > 0:
-                        #cachepeaks = []
-                        #for c in self.peakcache[h-1]:
-                            #try:
-                                #cachepeaks.append(c[t])
-                            #except IndexError:
-                                #pass # ignore missing data in cache, just use less measurements for fluctuation calculation.
-                        #cachepeaks.append(peak0)
-                        #try:
-                            #md.update({f'harm{h}_turn{t}_fluctuation': np.std(cachepeaks, ddof=1)})
-                        #except TypeError:
-                            #pass # this happens when np.std fails due to insufficient data (Nones in cachepeak), skip fluctuation calculation for this turn.
                     
                     if self.plot and self.plot_index < self.plotmax:
                         windowstarttime, windowendtime = currenttrace.get_window_times(t)
@@ -415,10 +416,14 @@ class SequenceAnalyzer:
                         plt2.plot(bgavgtrace[self.timecolumn][currentmaxposavg]*1e9, currentmaxavg, 'rx')
                     plt2.grid()
                     plt2.set_title(f'harm {h}, turn {t+1}, avg')
-                
-            self.averagecache[h-1].append(bgtraces)
-            if len(self.averagecache[h-1]) > self.averaginglength-1:
-                del self.averagecache[h-1][0]
+            
+            # append current data to averagecache for next sample averaging
+            self.averagecache[h-1].append(bgtraces)            
+            # averagecache should consist of averaginglength-1 entries (as during calculating the avg. for the next sample the new data is also used)
+            # delete excess elements, oldest first
+            avglendiff = len(self.averagecache[h-1]) - (self.averaginglength-1)
+            if avglendiff > 0:
+                del self.averagecache[h-1][0:avglendiff]
                 
             #if len(peak0list) > 0:
                 #self.peakcache[h-1].append(peak0list)
