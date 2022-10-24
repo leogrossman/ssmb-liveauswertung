@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 from SSMBTraceAnalyzer import TraceAnalyzer
 import SSMBTraceAnalyzerUtilities as util
 
+DFCOLUMNS = ['datetime', 'filename', 'chunk_index', 'centerpeak_pos', 'averaging_length_harm1', 'averaging_length_harm2', 'fluctuation_length_harm1', 'fluctuation_length_harm2']
 
 class SequenceAnalyzer:
     
@@ -97,7 +98,7 @@ class SequenceAnalyzer:
             self.windowcenter = windowcenter
             self.windowwidth = windowwidth
             self.averagecache = ([],[])
-            self.peakcache = ([],[])
+            self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
             # we have to reset averaging and fluctuation calculation as the previous data does not fit anymore due to the changed window
     
     def set_centerpeak_pos(self, centerpeak_pos, harm_for_auto_centerpeak = None, turn_for_auto_centerpeak = None):
@@ -202,11 +203,9 @@ class SequenceAnalyzer:
     def reset_sequence(self):
         self.chunk_index = 0
         self.averagecache = ([],[])
-        self.peakcache = ([],[])
         # define some columns known to exist to fix the order and avoid integer values being converted to float:
-        dfcolumns = ['datetime', 'filename', 'chunk_index', 'centerpeak_pos', 'averaging_length_harm1', 'averaging_length_harm2', 'fluctuation_length_harm1', 'fluctuation_length_harm2']
-        self.peakdatacache = pd.DataFrame(columns=dfcolumns)
-        self.peakdata = pd.DataFrame(columns=dfcolumns)
+        self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
+        self.peakdata = pd.DataFrame(columns=DFCOLUMNS)
         
         # there seems to be a bug in old pandas versions that prevents initialization of empty DataFrames with column names only,
         # we have to do it like this:
@@ -279,7 +278,7 @@ class SequenceAnalyzer:
             # reset the averaging, reset the automatic centerpeak position and increment the chunk_index,
             # if either the horizontal scale has changed or the last trace is more than X seconds old
             self.averagecache = ([],[])
-            self.peakcache = ([],[])
+            self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
             if self.centerpeak_determination_automatic:
                 self.centerpeak_pos = None # reset the centerpeak_pos to "unknown" only for automatic determination
             self.chunk_index += 1
@@ -325,7 +324,8 @@ class SequenceAnalyzer:
             if not currenttrace.harmonic_exists(h):
                 print(f"Warning: No data columns matching harmonic {h} column names")
                 self.averagecache[h-1].clear() # if there is no data for the current column in this trace:
-                self.peakcache[h-1].clear()    # reset averaging (delete averagecache) and fluctuation (delete peakcache) as continuity to previous traces is lost when data resumes
+                                               # reset averaging (delete averagecache) as continuity to previous traces is lost when data resumes
+                                               # peakdatacache for fluctuation calculation does not need to be reset as it will be filled with NaNs
                 continue # skip to next harmonic
             
             datacolumn = self.harm2column if h == 2 else self.harm1column
@@ -418,12 +418,7 @@ class SequenceAnalyzer:
             avglendiff = len(self.averagecache[h-1]) - (self.averaginglength-1)
             if avglendiff > 0:
                 del self.averagecache[h-1][0:avglendiff]
-                
-            #if len(peak0list) > 0:
-                #self.peakcache[h-1].append(peak0list)
-            #if len(self.peakcache[h-1]) > self.averaginglength-1:
-                #del self.peakcache[h-1][0]
-
+            
             if self.plot and self.plot_index < self.plotmax:
                 fig.savefig(self.plotfolder+f'SequenceAnalyzer_harm{h}_chunk{self.chunk_index}_trace{self.plot_index}.png')
                 plt.close(fig)
@@ -434,7 +429,7 @@ class SequenceAnalyzer:
         if log_peakdata:
             self.peakdata = pd.concat([self.peakdata, pd.DataFrame(md, index=[0])], ignore_index = True)#, sort=True)
         
-        # append peakdata output to peakcache for next flucuation calculation
+        # append peakdata output to peakdatacache for next flucuation calculation
         self.peakdatacache = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True)#, sort=True)
         # peakdatacache should consist of averaginglength-1 entries (as during calculating the fluctuation for the next sample the new data is also used)
         # delete excess elements, oldest first
