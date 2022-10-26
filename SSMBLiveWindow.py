@@ -119,20 +119,39 @@ class SSMBWindow(tk.Frame):
         print('Initialize plotting...')
         ### Initialize plotting module and create graphs ###
         self._plt = SSMBPlotting(self.__frame_harm1, self.__frame_harm2, figsize_overview=(6.8,2), figsize_detail=(2.5,2))
-        self._plt.get_canvas(overview=True, harm=1).grid(row=2, column=0, columnspan=6, padx=3, pady=3, sticky=tk.W)
+        self._plt.get_canvas(overview=True, harm=1).grid(row=2, column=0, columnspan=8, padx=3, pady=3, sticky=tk.W)
         self._plt.get_canvas(overview=False, harm=1, turn=1).grid(row=4, column=0, rowspan=8, padx=3, pady=3)
-        self._plt.get_canvas(overview=False, harm=1, turn=2).grid(row=4, column=3, rowspan=8, padx=3, pady=3)
-        self._plt.get_canvas(overview=True, harm=2).grid(row=2, column=0, columnspan=6, padx=3, pady=3, sticky=tk.W)
+        self._plt.get_canvas(overview=False, harm=1, turn=2).grid(row=4, column=3, rowspan=8, columnspan=3, padx=3, pady=3)
+        self._plt.get_canvas(overview=True, harm=2).grid(row=2, column=0, columnspan=8, padx=3, pady=3, sticky=tk.W)
         self._plt.get_canvas(overview=False, harm=2, turn=1).grid(row=4, column=0, rowspan=8, padx=3, pady=3)
-        self._plt.get_canvas(overview=False, harm=2, turn=2).grid(row=4, column=3, rowspan=8, padx=3, pady=3)
+        self._plt.get_canvas(overview=False, harm=2, turn=2).grid(row=4, column=3, rowspan=8, columnspan=3, padx=3, pady=3)
         print('done.')
         
         tk.Label(self.__frame_harm1, text='raw oscilloscope trace',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=1, column=0, sticky=tk.W)
         tk.Label(self.__frame_harm1, text='first turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=0, sticky=tk.W)
-        tk.Label(self.__frame_harm1, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=3, sticky=tk.W)
+        tk.Label(self.__frame_harm1, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=3, columnspan=3, sticky=tk.W)
         tk.Label(self.__frame_harm2, text='raw oscilloscope trace',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=1, column=0, sticky=tk.W)
         tk.Label(self.__frame_harm2, text='first turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=0, sticky=tk.W)
-        tk.Label(self.__frame_harm2, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=3, sticky=tk.W)
+        tk.Label(self.__frame_harm2, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=3, columnspan=3, sticky=tk.W)
+        
+        ### Scope scale buttons ###
+        self.__harm1autoscale = False
+        tk.Label(self.__frame_harm1, text='Scope: Vertical Scale', bg=self.__color_harm1).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
+        self.__harm1autoscaleBtn = tk.Button(self.__frame_harm1, text='Manual', width=8, command=self.__scale_harm1_auto)
+        self.__harm1autoscaleBtn.grid(row=0, column=3, rowspan=2)
+        self.__harm1scaleupBtn = tk.Button(self.__frame_harm1, text='larger', width=5, command=self.__scale_harm1_inc)
+        self.__harm1scaleupBtn.grid(row=0, column=4, rowspan=2)
+        self.__harm1scaledownBtn = tk.Button(self.__frame_harm1, text='smaller', width=5, command=self.__scale_harm1_dec)
+        self.__harm1scaledownBtn.grid(row=0, column=5, rowspan=2)
+        
+        self.__harm2autoscale = False
+        tk.Label(self.__frame_harm2, text='Scope: Vertical Scale', bg=self.__color_harm2).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
+        self.__harm2autoscaleBtn = tk.Button(self.__frame_harm2, text='Manual', width=8, command=self.__scale_harm2_auto)
+        self.__harm2autoscaleBtn.grid(row=0, column=3, rowspan=2)
+        self.__harm2scaleupBtn = tk.Button(self.__frame_harm2, text='larger', width=5, command=self.__scale_harm2_inc)
+        self.__harm2scaleupBtn.grid(row=0, column=4, rowspan=2)
+        self.__harm2scaledownBtn = tk.Button(self.__frame_harm2, text='smaller', width=5, command=self.__scale_harm2_dec)
+        self.__harm2scaledownBtn.grid(row=0, column=5, rowspan=2)
         
         ### Turn and peak selection boxes for first harmonic ###
         self.__harm1t1_peak = tk.IntVar(self.master, value=0)
@@ -144,14 +163,14 @@ class SSMBWindow(tk.Frame):
         self.__harm1t2_peak = tk.IntVar(self.master, value=0)
         self.__harm1t2_peakBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t2_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm1t2_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t2_peakBox.grid(row=5, column=5)
-        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=4, sticky=tk.E)
+        self.__harm1t2_peakBox.grid(row=5, column=7)
+        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=6, sticky=tk.E)
         
         self.__harm1t2_turn = tk.IntVar(self.master, value=2)
         self.__harm1t2_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t2_turn, values=[2,3,4], state='readonly', width=4)
         self.__harm1t2_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t2_turnBox.grid(row=4, column=5)
-        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=4, sticky=tk.E)
+        self.__harm1t2_turnBox.grid(row=4, column=7)
+        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=6, sticky=tk.E)
         
         ### Result display Entries for first harmonic ###
         self.__harm1t1_peakampl = tk.StringVar(self.master, value=0)
@@ -174,15 +193,15 @@ class SSMBWindow(tk.Frame):
         self.__harm1t2_fluctuation = tk.StringVar(self.master, value=0)
                 
         self.__harm1t2_peakamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t2_peakampl, state='readonly', width=11)
-        self.__harm1t2_peakamplEtr.grid(row=7, column=4, columnspan=2)
+        self.__harm1t2_peakamplEtr.grid(row=7, column=6, columnspan=2)
         self.__harm1t2_avgamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t2_avgampl, state='readonly', width=11)
-        self.__harm1t2_avgamplEtr.grid(row=9, column=4, columnspan=2)
+        self.__harm1t2_avgamplEtr.grid(row=9, column=6, columnspan=2)
         self.__harm1t2_fluctuationEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t2_fluctuation, state='readonly', width=11)
-        self.__harm1t2_fluctuationEtr.grid(row=11, column=4, columnspan=2)
+        self.__harm1t2_fluctuationEtr.grid(row=11, column=6, columnspan=2)
         
-        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=6, column=4, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=8, column=4, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=10, column=4, columnspan=2, sticky=tk.S)        
+        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=6, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=8, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=10, column=6, columnspan=2, sticky=tk.S)
         
         ### Turn and peak selection boxes for second harmonic ###
         self.__harm2t1_peak = tk.IntVar(self.master, value=0)
@@ -194,14 +213,14 @@ class SSMBWindow(tk.Frame):
         self.__harm2t2_peak = tk.IntVar(self.master, value=0)
         self.__harm2t2_peakBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t2_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm2t2_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t2_peakBox.grid(row=5, column=5)
-        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=4, sticky=tk.E)
+        self.__harm2t2_peakBox.grid(row=5, column=7)
+        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=6, sticky=tk.E)
         
         self.__harm2t2_turn = tk.IntVar(self.master, value=2)
         self.__harm2t2_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t2_turn, values=[2,3,4], state='readonly', width=4)
         self.__harm2t2_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t2_turnBox.grid(row=4, column=5)
-        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=4, sticky=tk.E)
+        self.__harm2t2_turnBox.grid(row=4, column=7)
+        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=6, sticky=tk.E)
         
         ### Result display Entries for second harmonic ###
         self.__harm2t1_peakampl = tk.StringVar(self.master, value=0)
@@ -224,15 +243,15 @@ class SSMBWindow(tk.Frame):
         self.__harm2t2_fluctuation = tk.StringVar(self.master, value=0)
                 
         self.__harm2t2_peakamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t2_peakampl, state='readonly', width=11)
-        self.__harm2t2_peakamplEtr.grid(row=7, column=4, columnspan=2)
+        self.__harm2t2_peakamplEtr.grid(row=7, column=6, columnspan=2)
         self.__harm2t2_avgamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t2_avgampl, state='readonly', width=11)
-        self.__harm2t2_avgamplEtr.grid(row=9, column=4, columnspan=2)
+        self.__harm2t2_avgamplEtr.grid(row=9, column=6, columnspan=2)
         self.__harm2t2_fluctuationEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t2_fluctuation, state='readonly', width=11)
-        self.__harm2t2_fluctuationEtr.grid(row=11, column=4, columnspan=2)
+        self.__harm2t2_fluctuationEtr.grid(row=11, column=6, columnspan=2)
                 
-        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=6, column=4, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=8, column=4, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=10, column=4, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=6, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=8, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=10, column=6, columnspan=2, sticky=tk.S)
         
         ### Evaluation configuration panel ###
         self.__config_focus_cache = 0 # storage for value before focus was obtained, to be restored if focus is lost
@@ -283,9 +302,9 @@ class SSMBWindow(tk.Frame):
         
         tk.Label(self.__frame_config, bg=self.__color_config, width=2).grid(row=2, column=2)
         
-        self.__config_centerautoBtn = tk.Button(self.__frame_config, text='Auto', command=self.__center2auto, width=12, bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+        self.__config_centerautoBtn = tk.Button(self.__frame_config, text='Contin. automatic', command=self.__center2auto, width=12, bg=self.__color_btngreen, activebackground=self.__color_btngreen)
         self.__config_centerautoBtn.grid(row=2, column=3)
-        self.__config_centerfixBtn = tk.Button(self.__frame_config, text='Fixed auto', command=self.__center2fix, width=12)
+        self.__config_centerfixBtn = tk.Button(self.__frame_config, text='Fixed automatic', command=self.__center2fix, width=12)
         self.__config_centerfixBtn.grid(row=2, column=4)
         self.__config_centermanuBtn = tk.Button(self.__frame_config, text='Manual', command=self.__center2manu, width=12)
         self.__config_centermanuBtn.grid(row=2, column=5)
@@ -312,17 +331,18 @@ class SSMBWindow(tk.Frame):
         self.__acq_sequenceBtn.grid(row=1, column=2)
         
         self.__acq_sequencelen = tk.IntVar(self.master, value=10)
-        self.__acq_sequencelenEtr = tk.Entry(self.__frame_saving, width=8, textvariable = self.__acq_sequencelen, justify='right', validate = 'all', validatecommand = self.__int_validate_callback)
-        self.__acq_sequencelenEtr.grid(row=1, column=3)
+        self.__acq_sequencelenEtr = tk.Entry(self.__frame_saving, width=5, textvariable = self.__acq_sequencelen, justify='right', validate = 'all', validatecommand = self.__int_validate_callback)
+        self.__acq_sequencelenEtr.grid(row=1, column=4, sticky=tk.W)
         self.__acq_sequencenum = tk.IntVar(self.master, value=10)
         self.__acq_sequencenumEtr = tk.Entry(self.__frame_saving, width=8, textvariable = self.__acq_sequencenum, justify='right', validate = 'all', validatecommand = self.__int_validate_callback, state='readonly')
-        self.__acq_sequencenumEtr.grid(row=1, column=4)
+        self.__acq_sequencenumEtr.grid(row=1, column=6, sticky=tk.W)
+        
+        tk.Label(self.__frame_saving, text='length', bg=self.__color_saving).grid(row=1, column=3, sticky=tk.E)
+        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=1, column=5, sticky=tk.E)        
         
         ### Data saving panel ###
-        tk.Label(self.__frame_saving, text='Seq. length', bg=self.__color_saving).grid(row=2, column=3, sticky=tk.N)
-        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=2, column=4, sticky=tk.N)
-
-        tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=2, column=0)
+        tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=3, column=0)
+        
         self.__rawdata_path = tk.StringVar(self.master)
         self.__rawdata_pathEtr = tk.Entry(self.__frame_saving, width=35, textvariable=self.__rawdata_path)
         self.__rawdata_pathEtr.grid(row=5,column=0, columnspan=2, padx=3)
@@ -330,20 +350,20 @@ class SSMBWindow(tk.Frame):
         self.__rawdata_browseBtn.grid(row=5, column=2, padx=3)
         self.__rawdata_name = tk.StringVar(self.master)
         self.__rawdata_nameEtr = tk.Entry(self.__frame_saving, width=22, textvariable=self.__rawdata_name)
-        self.__rawdata_nameEtr.grid(row=5, column=3, columnspan=2, padx=3)
+        self.__rawdata_nameEtr.grid(row=5, column=3, columnspan=3, padx=3)
         
         #TODO how can we get the info on number of saved files??
         # self.__rawdata_numsaved = tk.IntVar(self.master, value=0)
         # self.__rawdata_numsavedEtr = tk.Entry(self.__frame_saving, width=8, justify='right', textvariable=self.__rawdata_numsaved, state='readonly')
         # self.__rawdata_numsavedEtr.grid(row=5, column=5, padx=3)
 
-        tk.Label(self.__frame_saving, text='Save raw data', bg=self.__color_saving, relief=tk.RAISED).grid(row=3, column=0, sticky=tk.W)        
-        tk.Label(self.__frame_saving, text='saved traces', bg=self.__color_saving).grid(row=6, column=5, padx=3, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='Save raw data', bg=self.__color_saving, relief=tk.RAISED).grid(row=4, column=0, sticky=tk.W)        
+        tk.Label(self.__frame_saving, text='saved traces', bg=self.__color_saving).grid(row=6, column=6, padx=3, sticky=tk.W)
         tk.Label(self.__frame_saving, text='path to folder', bg=self.__color_saving).grid(row=6, column=0, sticky=tk.W)
-        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=6, column=3, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=6, column=3, columnspan=2, sticky=tk.W)
         
         self.__rawdata_saveBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__rawdata_save)
-        self.__rawdata_saveBtn.grid(row=5, column=5, padx=3)
+        self.__rawdata_saveBtn.grid(row=5, column=6, padx=3)
         
         tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=7, column=0)
         
@@ -358,7 +378,7 @@ class SSMBWindow(tk.Frame):
         self.__logging_numsavedEtr.grid(row=8, column=2, padx=3)
 
         tk.Label(self.__frame_saving, text='Log evaluation results', bg=self.__color_saving, relief=tk.RAISED).grid(row=8, column=0, sticky=tk.W)        
-        tk.Label(self.__frame_saving, text='logged results', bg=self.__color_saving).grid(row=8, column=3, padx=3, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='logged results', bg=self.__color_saving).grid(row=8, column=3, columnspan=2, padx=3, sticky=tk.W)
         tk.Label(self.__frame_saving, text='path to file', bg=self.__color_saving).grid(row=10, column=0, sticky=tk.W)
         #tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=10, column=2, sticky=tk.W)
         
@@ -366,10 +386,10 @@ class SSMBWindow(tk.Frame):
         self.__logging_startstopBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__logging_startstop)
         self.__logging_startstopBtn.grid(row=8, column=1, padx=3)
         self.__logging_clearBtn = tk.Button(self.__frame_saving, text='Clear', width=8, command=self.__logging_clear)
-        self.__logging_clearBtn.grid(row=8, column=5, sticky=tk.W)
+        self.__logging_clearBtn.grid(row=8, column=6, sticky=tk.W)
         
         self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data (disabled)', width=20)#, command=self.__logging_save)
-        self.__logging_saveBtn.grid(row=9, column=3, columnspan=2, padx=3, sticky=tk.W)
+        self.__logging_saveBtn.grid(row=9, column=3, columnspan=3, padx=3, sticky=tk.W)
 
         ### register window closing protocol ###
         self.master.protocol("WM_DELETE_WINDOW", self.close)
@@ -491,7 +511,7 @@ class SSMBWindow(tk.Frame):
         ### connect to scope ###
         try:
             print(f'Connecting to MSO-64 scope (IP: {scopeip})...') 
-            self._ctrl = SSMBScopeControl(scopeip, self._analyzer.data_queue)
+            self._ctrl = SSMBScopeControl(scopeip, self._analyzer.data_queue, self._analyzer.maxvalue_queue)
             idn = self._ctrl.get_id()
             print('Connection to SSMB scope successful. Scope ID:')
             print(idn)
@@ -613,7 +633,54 @@ class SSMBWindow(tk.Frame):
     def __center2center(self):
         self.__config_centerpos.set(self.__config_winwidth.get()/2)
         self.__update_centerpos(event=None)
-
+    
+    def __scale_harm1_auto(self):
+        if self.__harm1autoscale:
+            self._ctrl.control_queue.put(['manuscale', 0])
+            self.__harm1autoscale = False
+            self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        else:
+            self._ctrl.control_queue.put(['autoscale', 0, self.__column_harm1])
+            self.__harm1autoscale = True
+            self.__harm1autoscaleBtn.configure(text='Automatic', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+    
+    def __scale_harm1_inc(self):
+        if self.__harm1autoscale:
+            self._ctrl.control_queue.put(['manuscale', 0])
+            self.__harm1autoscale = False
+            self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        self._ctrl.status_queue.put(['increase', self.__column_harm1])
+    
+    def __scale_harm1_dec(self):
+        if self.__harm1autoscale:
+            self._ctrl.control_queue.put(['manuscale', 0])
+            self.__harm1autoscale = False
+            self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        self._ctrl.status_queue.put(['decrease', self.__column_harm1])
+    
+    def __scale_harm2_auto(self):
+        if self.__harm2autoscale:
+            self._ctrl.control_queue.put(['manuscale', 1])
+            self.__harm2autoscale = False
+            self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        else:
+            self._ctrl.control_queue.put(['autoscale', 1, self.__column_harm2])
+            self.__harm2autoscale = True
+            self.__harm2autoscaleBtn.configure(text='Automatic', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+    
+    def __scale_harm2_inc(self):
+        if self.__harm2autoscale:
+            self._ctrl.control_queue.put(['manuscale', 1])
+            self.__harm2autoscale = False
+            self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        self._ctrl.status_queue.put(['increase', self.__column_harm2])
+    
+    def __scale_harm2_dec(self):
+        if self.__harm2autoscale:
+            self._ctrl.control_queue.put(['manuscale', 1])
+            self.__harm2autoscale = False
+            self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        self._ctrl.status_queue.put(['decrease', self.__column_harm2])
         
     def main_loop(self):
         while self._ctrl.status_queue.qsize(): # iterate as long as there are status items to get
@@ -728,9 +795,7 @@ class SSMBWindow(tk.Frame):
             self.plotting = True
             self.__doplottingBtn.configure(text = 'Plotting enabled', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
 			
-	
 
-    #TODO buttons for changing channel vertical scale?
     def __acq_run(self):
         try:
             if self.__acqstate == 'STOP':

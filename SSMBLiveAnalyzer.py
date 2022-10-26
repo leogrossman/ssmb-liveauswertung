@@ -12,11 +12,12 @@ from SSMBSequenceAnalyzer import SequenceAnalyzer
 
 class SSMBLiveAnalyzer:
     def __init__(self, epics, logging=False, **initialparameters):
-        self.data_queue = queue.Queue() # queue for feeding raw data from the scope control module
+        self.data_queue = queue.Queue() # new queue for feeding raw data from the scope control module
         self.__PV = epics.PV            # reference to the epics access module (passed here with initialization)
         self.__analyzer = SequenceAnalyzer(**initialparameters)  # initialize SequenceAnalyzer with starting parameters
         self.parameter_queue = queue.Queue()  # new queue to input new parameters from the main window
         self.result_queue = queue.LifoQueue() # new queue to output evaluated data to the main window (Lifo: always use newest data, display will be slower than evaluation)
+        self.maxvalue_queue = queue.Queue()   # new queue to output evaluated max peak heights for scope scale adjustment
         self.__epics_queue = epics.data_queue # get queue to output evaluated data to the epics access module (passed here with initialization)
         self.go = False
         self.logging = logging
@@ -73,5 +74,6 @@ class SSMBLiveAnalyzer:
                 self.__analyzer.next_analysis(data = data, date_time = date, log_peakdata = self.logging, frf=self.__PV.get_frf())
                 self.result_queue.put((self.__analyzer.get_current_trace_analysis(), self.__analyzer.get_current_peakdata(), self.__analyzer.get_centerpeak_pos(), self.__analyzer.get_peakdata_length()))
                 self.__epics_queue.put(self.__analyzer.get_current_peakdata())
+                self.maxvalue_queue.put((self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=1), self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=2)))
             except queue.Empty:
                 pass # no new data, continue

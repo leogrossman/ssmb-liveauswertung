@@ -18,6 +18,9 @@ def format_command(command, argument, form = "%g"):
     return command + " " + form % argument
     
 def larger_scale(scale):
+    """
+    takes a scale (in V/div) and outputs the next larger (more coarse) scale on the 1,2,5,10... sequence.
+    """
     exp = np.floor(np.log10(scale))
     mant = scale/10**exp
     if mant >= 5:
@@ -28,6 +31,9 @@ def larger_scale(scale):
         return 2*10**exp
 
 def smaller_scale(scale):
+    """
+    takes a scale (in V/div) and outputs the next smaller (more fine) scale on the 1,2,5,10... sequence.
+    """
     exp = np.floor(np.log10(scale))
     mant = scale/10**exp
     if mant > 5:
@@ -41,12 +47,13 @@ def smaller_scale(scale):
     
 class SSMBScopeControl:
     
-    def __init__(self, scopeip, data_queue):
+    def __init__(self, scopeip, data_queue, maxvalue_queue):
         """
         Opens a vxi11 connection to the scope at ``scopeip`` and readys the scope control loop in a new thread. Communication via three queues:
          --control_queue: send commands for the scope here in the form ['command', (arguments, ...)] (queue item must be a *list*).
          --status_queue: returns the acquisition status of the scope (format TBD)
          --data_queue: here the acquired data is output, in the form (date, data).
+         --maxvalue_queue: here the maximum peak height is input for automatic scaling, in the form (harm1, harm2).
 
         Parameters
         ----------
@@ -64,6 +71,7 @@ class SSMBScopeControl:
         self.control_queue = queue.Queue()
         self.status_queue = queue.Queue()
         self.__data_queue = data_queue
+        self.__maxvalue_queue = maxvalue_queue
         
     def start(self):
         """
@@ -84,8 +92,12 @@ class SSMBScopeControl:
         acqnumber = 0
         savestatus = None
         checkseqlen = False
+        scalelen = 20
+        scaleauto = [False, False]
+        scalechannel = ['CH3', 'CH4']
+        scalemaxcache = ([],[])
         while self.go:
-            while self.control_queue.qsize(): # iterate as long as there are items to get
+            while self.control_queue.qsize(): # iterate as long as there are items to get in the control queue
                 arguments = self.control_queue.get_nowait()
                 command = arguments[0]
                 del arguments[0]
@@ -102,18 +114,52 @@ class SSMBScopeControl:
                         self.start_acq_sequence(*arguments)
                     elif command == 'seqlen':
                         checkseqlen = True
-                    elif command == 'increase':
-                        self.increase_scale(*arguments)
-                    elif command == 'decrease':
-                        self.decrease_scale(*arguments)
                     elif command == 'savestart':
                         self.start_data_saving(*arguments)
                     elif command == 'savestop':
                         self.stop_data_saving()
+                    elif command == 'increase':
+                        self.increase_scale(*arguments)
+                    elif command == 'decrease':
+                        self.decrease_scale(*arguments)
+                    elif command == 'autoscale':
+                        try:
+                            scaleauto[arguments[0]] = True
+                            scalechannel[arguments[0]] = arguments[1]
+                            try:
+                                scalelen = arguments[2]
+                            except IndexError:
+                                pass
+                        except IndexError:
+                            print('Warning: Setting scope autoscale to automatic failed: No harmonic index given or invalid (must be 0 or 1), or no channel name given')
+                    elif command == 'manuscale':
+                        try:
+                            scalemaxcache[arguments[0]].clear()
+                            scaleauto[arguments[0]] = False
+                        except IndexError:
+                            print('Warning: Setting scope autoscale to manual failed: No harmonic index given or invalid (must be 0 or 1)')
                 except (TypeError, ValueError) as e:
                     print(f'Error: ScopeControl: Invalid command "{command}", {arguments}. Error message:')
                     print(type(e), e)
-            # once all commands are completed, start checking for new data
+                    
+            # once all commands are completed, check for new peak height for automatic scaling
+            try:
+                maxpeaks = self.__maxvalue_queue.get_nowait()
+                for i in range(2): # iterate harmonic 1 and 2
+                    if scaleauto[i] and maxpeaks[i] is not None:
+                        scalemaxcache[i].append(maxpeaks[i])
+                        lendiff = len(scalemaxcache) - scalelen
+                        if lendiff > 0:
+                            del scalemaxcache[i][0:lendiff]
+                        screenmax, smallerscreenmax = self.get_screen_max(scalechannel[i])
+                        if maxpeaks[i] > screenmax: # if the current value leaves the screen, scale up immediately.
+                            self.increase_scale(scalechannel[i])
+                        elif all([mp < smallerscreenmax for mp in scalemaxcache[i]]): # if over the last scalelen all maxpeaks would have fit on the screen for the next lower scale, scale down.
+                            self.decrease_scale(scalechannel[i])
+            except queue.Empty:
+                pass # no new data, continue
+            
+            # then check for new data
             if self.check_for_new_acqusition():
                 date = datetime.now()
                 data = self.get_data()
@@ -232,6 +278,15 @@ class SSMBScopeControl:
         clipping = [bool(int(self.scope.ask(ch+':Clipping?'))) for ch in self.channels]
         return clipping
     
+    def get_screen_max(self, channel):
+        """
+        Returns the maximum value displayed at the upper limit of the screen for ``channel`` (give channel name) for the current and the next smaller scale
+        Returns in the format (currentscale, smallerscale)
+        """
+        scale = float(self.scope.ask(channel+":SCALE?"))
+        position = float(self.scope.ask(channel+":POS?"))
+        return (5-position) * scale, (5-position) * smaller_scale(scale)
+        
 
     def get_data(self):
         """

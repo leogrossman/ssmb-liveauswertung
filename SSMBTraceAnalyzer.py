@@ -479,7 +479,7 @@ class TraceAnalyzer:
 
     def get_max_peak(self, turn = 0, average = False, harmonic = 1):
         """
-        Get the value of the highest peak within the ``turn`` window.
+        Get the value of the highest peak within the ``turn`` window for the given harmonic.
 
         Parameters
         ----------
@@ -508,6 +508,28 @@ class TraceAnalyzer:
                 return max(self.bgcorrectedtraces2[turn][self.harm2column].iloc[self.maxpeakexclusion:-self.maxpeakexclusion-1] if harmonic == 2 else self.bgcorrectedtraces1[turn][self.harm1column].iloc[self.maxpeakexclusion:-self.maxpeakexclusion-1])
             except ValueError:
                 return None
+            
+    def get_raw_max_peak(self, turn=0, harmonic=1):
+        """
+        Get the highest value within the ``turn`` window from the raw data for the given harmonic.
+
+        Parameters
+        ----------
+        turn : int, optional
+            index of the turn where to obtain the peak. The default is 0.
+        harmonic : int, optional
+            Number of harmonic (1,2,...). The default is 1.
+        
+        Returns
+        -------
+        float
+            the highest value in the raw data within the window.
+
+        """
+        try:
+            return max(self.trace.loc[slice(*self.get_window(turn))][self.harm2column if harmonic == 2 else self.harm1column])
+        except (KeyError, ValueError): # if there is illegal or no data, return None.
+            return None
 
     def get_peaks(self, turn = 0, with_average = True, centerpeak_pos_ns = None, sidepeaks = 0, harmonic = 1):
         """
