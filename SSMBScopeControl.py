@@ -165,8 +165,18 @@ class SSMBScopeControl:
             # then check for new data
             if self.check_for_new_acqusition():
                 date = datetime.now()
-                data = self.get_data()
-                self.__data_queue.put((date, data))
+                try:
+                    data = self.get_data()
+                    self.__data_queue.put((date, data))
+                except:
+                    print('Warning: There was an error trying to read data from the scope.')
+                    try:
+                        data = self.get_data()
+                        self.__data_queue.put((date, data))
+                        print('Retry successful.')
+                    except Exception as e:
+                        print('Retry failed. Message:')
+                        print(type(e), e)
                 i = 0 # check for acqusition status immediately after the wait caused by acquiring data!
             
             if i <= 0: # checking aquisition status every 20 loops (200 ms) suffices
@@ -296,7 +306,7 @@ class SSMBScopeControl:
         Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: 'TIME', [channel names as given in channel list].
         """
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
-        self.scope.write('DATa:SOURCE ' + ','.join(self.channels))
+        self.scope.write('DATA:SOURCE ' + ','.join(self.channels))
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
         self.scope.write('DATA:START 1')
         self.scope.write('DATA:STOP %d' % reclen)
@@ -336,11 +346,11 @@ class SSMBScopeControl:
         self.scope.write('SAVEON:WAVE:FILEF ' + 'INTERN' if savebinary else 'SPREADSHEET')
         self.scope.write('SAVEON:WAVE:SOURCE ALL')
         self.scope.write('SAVEON:WAVE ON')
-        print(f'SCOPE: Start data saving as "{filename}" at {path}')
+        print(f'SCOPE: start data saving as "{filename}" at {path}')
         self.scope.write('SAVEON:TRIG ON')
     
     def stop_data_saving(self):
-        print('SCOPE: Stop data saving')
+        print('SCOPE: stop data saving')
         self.scope.write('SAVEON:TRIG OFF')
     
     def get_data_saving_status(self):
@@ -363,7 +373,7 @@ class SSMBScopeControl:
         for channel in channels:
             currentscale = float(self.scope.ask(channel + ":SCALE?"))
             if currentscale < LARGEST_SCALE:
-                print('increase scale, channel', channel)
+                print('SCOPE: increase scale, channel', channel)
                 self.scope.write(format_command(channel + ":SCALE", larger_scale(currentscale)))
         
     def decrease_scale(self, *channels):
@@ -373,5 +383,5 @@ class SSMBScopeControl:
         for channel in channels:
             currentscale = float(self.scope.ask(channel + ":SCALE?"))
             if currentscale > SMALLEST_SCALE:
-                print('decrease scale, channel', channel)
+                print('SCOPE: decrease scale, channel', channel)
                 self.scope.write(format_command(channel + ":SCALE", smaller_scale(currentscale)))
