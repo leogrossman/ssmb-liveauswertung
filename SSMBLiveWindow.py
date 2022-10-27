@@ -649,14 +649,14 @@ class SSMBWindow(tk.Frame):
             self._ctrl.control_queue.put(['manuscale', 0])
             self.__harm1autoscale = False
             self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.status_queue.put(['increase', self.__column_harm1])
+        self._ctrl.control_queue.put(['increase', self.__column_harm1])
     
     def __scale_harm1_dec(self):
         if self.__harm1autoscale:
             self._ctrl.control_queue.put(['manuscale', 0])
             self.__harm1autoscale = False
             self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.status_queue.put(['decrease', self.__column_harm1])
+        self._ctrl.control_queue.put(['decrease', self.__column_harm1])
     
     def __scale_harm2_auto(self):
         if self.__harm2autoscale:
@@ -673,14 +673,14 @@ class SSMBWindow(tk.Frame):
             self._ctrl.control_queue.put(['manuscale', 1])
             self.__harm2autoscale = False
             self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.status_queue.put(['increase', self.__column_harm2])
+        self._ctrl.control_queue.put(['increase', self.__column_harm2])
     
     def __scale_harm2_dec(self):
         if self.__harm2autoscale:
             self._ctrl.control_queue.put(['manuscale', 1])
             self.__harm2autoscale = False
             self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.status_queue.put(['decrease', self.__column_harm2])
+        self._ctrl.control_queue.put(['decrease', self.__column_harm2])
         
     def main_loop(self):
         while self._ctrl.status_queue.qsize(): # iterate as long as there are status items to get

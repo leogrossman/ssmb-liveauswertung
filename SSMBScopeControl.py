@@ -17,6 +17,9 @@ from datetime import datetime
 def format_command(command, argument, form = "%g"):
     return command + " " + form % argument
     
+SMALLEST_SCALE = 1e-3 # 1 mV/div
+LARGEST_SCALE  = 1    # 1 V/div
+    
 def larger_scale(scale):
     """
     takes a scale (in V/div) and outputs the next larger (more coarse) scale on the 1,2,5,10... sequence.
@@ -148,13 +151,13 @@ class SSMBScopeControl:
                 for i in range(2): # iterate harmonic 1 and 2
                     if scaleauto[i] and maxpeaks[i] is not None:
                         scalemaxcache[i].append(maxpeaks[i])
-                        lendiff = len(scalemaxcache) - scalelen
+                        lendiff = len(scalemaxcache[i]) - scalelen
                         if lendiff > 0:
                             del scalemaxcache[i][0:lendiff]
                         screenmax, smallerscreenmax = self.get_screen_max(scalechannel[i])
-                        if maxpeaks[i] > screenmax: # if the current value leaves the screen, scale up immediately.
+                        if maxpeaks[i] > screenmax * .97: # if the current value leaves the screen, scale up immediately. (slready at 97% as clipped values are NaN and would not work)
                             self.increase_scale(scalechannel[i])
-                        elif all([mp < smallerscreenmax for mp in scalemaxcache[i]]): # if over the last scalelen all maxpeaks would have fit on the screen for the next lower scale, scale down.
+                        elif all([mp < smallerscreenmax * .97 for mp in scalemaxcache[i]]): # if over the last scalelen all maxpeaks would have fit on the screen for the next lower scale, scale down.
                             self.decrease_scale(scalechannel[i])
             except queue.Empty:
                 pass # no new data, continue
@@ -292,25 +295,27 @@ class SSMBScopeControl:
         """
         Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: 'TIME', [channel names as given in channel list].
         """
-        self.scope.write('DATA:ENC SRP') # unsigned int, LSB first
+        self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
         self.scope.write('DATa:SOURCE ' + ','.join(self.channels))
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
         self.scope.write('DATA:START 1')
         self.scope.write('DATA:STOP %d' % reclen)
-        datawidth = int(self.scope.ask('DATA:WIDTH?'))
+        datawidth = int(self.scope.ask('DATA:WIDTH?')) # number of bytes for each data point
         xoffset = int(self.scope.ask("WFMOutpre:PT_Off?"))
         xscale = float(self.scope.ask("WFMOutpre:XINCR?"))
-        binary = self.scope.ask('CURVE?', encoding='latin1')
+        binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
         k = 0
         channeldatalist = []
         while k<len(binary):
-            if binary[k] == ';':
+            if binary[k] == ';': # channels separated by ';', skip this char
                 k += 1
-            elif binary[k] == '#':
+            elif binary[k] == '#': # channel data length coded after '#'
                 k += 1
-                lx = int(binary[k])
-                ly = int(binary[k+1:k+1+lx])
-                k += 1+lx
+                lx = int(binary[k]) # number of data length characters in first character after '#' (this is ASCII!)
+                k += 1
+                ly = int(binary[k:k+lx]) # data length (this is ASCII!)
+                k += lx
+                # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
                 singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
                                                             # \ this needs least significant byte first!
                 k += ly
@@ -356,11 +361,17 @@ class SSMBScopeControl:
         increases the vertical scale for the given ``channels`` to the next higher scale.
         """
         for channel in channels:
-            self.scope.write(format_command(channel + ":SCALE", larger_scale(float(self.scope.ask(channel + ":SCALE?")))))
+            currentscale = float(self.scope.ask(channel + ":SCALE?"))
+            if currentscale < LARGEST_SCALE:
+                print('increase scale, channel', channel)
+                self.scope.write(format_command(channel + ":SCALE", larger_scale(currentscale)))
         
     def decrease_scale(self, *channels):
         """
         decreases the vertical scale for the given ``channels`` to the next lower scale.
         """
         for channel in channels:
-            self.scope.write(format_command(channel + ":SCALE", smaller_scale(float(self.scope.ask(channel + ":SCALE?")))))    
+            currentscale = float(self.scope.ask(channel + ":SCALE?"))
+            if currentscale > SMALLEST_SCALE:
+                print('decrease scale, channel', channel)
+                self.scope.write(format_command(channel + ":SCALE", smaller_scale(currentscale)))
