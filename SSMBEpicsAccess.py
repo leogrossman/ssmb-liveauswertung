@@ -32,14 +32,12 @@ class SSMBPVs:
             ### RF frequency readback PV to get bunch spacing
             self.pvfrf = PV('MCLKHGP:rdFrq499')
             
-            basic = True # True: val1..val30, False: proper names
+            basic = False # True: val1..val30, False: proper names
             ### PV name fragments ###
             IOC_NAME = 'SCOPE1ZULP' # TBD
             SEP1 = ':'
-            H1T1 = 'h1t1'
-            H1T2 = 'h1t2'
-            H2T1 = 'h2t1'
-            H2T2 = 'h2t2'
+            H1P = ['h1p1', 'h1p2', 'h1p3']
+            H2P = ['h2p1', 'h2p2', 'h2p3']
             SEP2 = ':'
             AMPL_RAW = 'rdAmpl'
             AMPL_AVG = AMPL_RAW + 'Av'
@@ -49,67 +47,30 @@ class SSMBPVs:
             
             ### connect to output PVs ###
             # first harmonic #
-            if basic:
-                self.pvharm1turn1 = PV(IOC_NAME + SEP1 + 'val11')
-                self.pvharm1turn1avg = PV(IOC_NAME + SEP1 + 'val12')
-                self.pvharm1turn1std = PV(IOC_NAME + SEP1 + 'val13')
-                self.pvharm1turn1peaknr = PV(IOC_NAME + SEP1 + 'val14')
-                self.pvharm1turn2 = PV(IOC_NAME + SEP1 + 'val15')
-                self.pvharm1turn2avg = PV(IOC_NAME + SEP1 + 'val16')
-                self.pvharm1turn2std = PV(IOC_NAME + SEP1 + 'val17')
-                self.pvharm1turn2turnnr = PV(IOC_NAME + SEP1 + 'val18')
-                self.pvharm1turn2peaknr = PV(IOC_NAME + SEP1 + 'val19')
-                
-            else:
-                self.pvharm1turn1 = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_RAW)
-                self.pvharm1turn1avg = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_AVG)
-                self.pvharm1turn1std = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + AMPL_STD)
-                self.pvharm1turn1peaknr = PV(IOC_NAME + SEP1 + H1T1 + SEP2 + PEAK_NR)
-                self.pvharm1turn2 = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_RAW)
-                self.pvharm1turn2avg = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_AVG)
-                self.pvharm1turn2std = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + AMPL_STD)
-                self.pvharm1turn2turnnr = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + TURN_NR)
-                self.pvharm1turn2peaknr = PV(IOC_NAME + SEP1 + H1T2 + SEP2 + PEAK_NR)
+            self.pvharm1 = [PV(IOC_NAME + SEP1 + HP + SEP2 + AMPL_RAW) for HP in H1P]
+            self.pvharm1avg = [PV(IOC_NAME + SEP1 + HP + SEP2 + AMPL_AVG) for HP in H1P]
+            self.pvharm1std = [PV(IOC_NAME + SEP1 + HP + SEP2 + AMPL_STD) for HP in H1P]
+            self.pvharm1turnnr = [PV(IOC_NAME + SEP1 + HP + SEP2 + TURN_NR) for HP in H1P]
+            self.pvharm1peaknr = [PV(IOC_NAME + SEP1 + HP + SEP2 + PEAK_NR) for HP in H1P]
             
             # second harmonic #
-            if basic:
-                self.pvharm2turn1 = PV(IOC_NAME + SEP1 + 'val21')
-                self.pvharm2turn1avg = PV(IOC_NAME + SEP1 + 'val22')
-                self.pvharm2turn1std = PV(IOC_NAME + SEP1 + 'val23')
-                self.pvharm2turn1peaknr = PV(IOC_NAME + SEP1 + 'val24')
-                self.pvharm2turn2 = PV(IOC_NAME + SEP1 + 'val25')
-                self.pvharm2turn2avg = PV(IOC_NAME + SEP1 + 'val26')
-                self.pvharm2turn2std = PV(IOC_NAME + SEP1 + 'val27')
-                self.pvharm2turn2turnnr = PV(IOC_NAME + SEP1 + 'val28')
-                self.pvharm2turn2peaknr = PV(IOC_NAME + SEP1 + 'val29')
-            else:
-                self.pvharm2turn1 = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_RAW)
-                self.pvharm2turn1avg = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_AVG)
-                self.pvharm2turn1std = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + AMPL_STD)
-                self.pvharm2turn1peaknr = PV(IOC_NAME + SEP1 + H2T1 + SEP2 + PEAK_NR)
-                self.pvharm2turn2 = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_RAW)
-                self.pvharm2turn2avg = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_AVG)
-                self.pvharm2turn2std = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + AMPL_STD)
-                self.pvharm2turn2turnnr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + TURN_NR)
-                self.pvharm2turn2peaknr = PV(IOC_NAME + SEP1 + H2T2 + SEP2 + PEAK_NR)
+            self.pvharm2 = [PV(IOC_NAME + SEP1 + HP + SEP2 + AMPL_RAW) for HP in H2P]
+            self.pvharm2avg = [PV(IOC_NAME + SEP1 + HP + SEP2 + AMPL_AVG) for HP in H2P]
+            self.pvharm2std = [PV(IOC_NAME + SEP1 + HP + SEP2 + AMPL_STD) for HP in H2P]
+            self.pvharm2turnnr = [PV(IOC_NAME + SEP1 + HP + SEP2 + TURN_NR) for HP in H2P]
+            self.pvharm2peaknr = [PV(IOC_NAME + SEP1 + HP + SEP2 + PEAK_NR) for HP in H2P]
             
             # laser and general parameters#
-            if basic:
-                self.pvlaserpos = PV(IOC_NAME + SEP1 + 'val01')
-                self.pvlasermax = PV(IOC_NAME + SEP1 + 'val02')
-                self.pvavglen   = PV(IOC_NAME + SEP1 + 'val05')
-                self.pvpeakpos  = PV(IOC_NAME + SEP1 + 'val06')
-            else:
-                self.pvlaserpos = PV(IOC_NAME + SEP1 + 'rdLaserPos')
-                self.pvlasermax = PV(IOC_NAME + SEP1 + 'rdLaserAmpl')
-                self.pvavglen   = PV(IOC_NAME + SEP1 + 'rdAvgLen')
-                self.pvpeakpos  = PV(IOC_NAME + SEP1 + 'rdPeakPos')
+            self.pvlaserpos = PV(IOC_NAME + SEP1 + 'rdLaserPos')
+            self.pvlasermax = PV(IOC_NAME + SEP1 + 'rdLaserAmpl')
+            self.pvavglen   = PV(IOC_NAME + SEP1 + 'rdAvLength')
+            self.pvpeakpos  = PV(IOC_NAME + SEP1 + 'rdPeakPos')
             
             ### clear PVs ###
             self.zero()
     
         
-    def update(self, peakdata, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0, harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0):
+    def update(self, peakdata, harm1turns=[1,2,3], harm1peaks=[0,0,0], harm2turns=[1,2,3], harm2peaks=[0,0,0]):
         """
         Update the SSMB PVs with new data.
 
@@ -138,26 +99,22 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            set_PV(self.pvharm1turn1, peakdata, f'harm1_turn0_peak{harm1lowturnpeak}')
-            set_PV(self.pvharm1turn1avg, peakdata, f'harm1_turn0_peak{harm1lowturnpeak}_avg')
-            set_PV(self.pvharm1turn1std, peakdata, f'harm1_turn0_peak{harm1lowturnpeak}_std')
-            set_PV(self.pvharm1turn2, peakdata, f'harm1_turn{harm1highturn-1}_peak{harm1highturnpeak}')
-            set_PV(self.pvharm1turn2avg, peakdata, f'harm1_turn{harm1highturn-1}_peak{harm1highturnpeak}_avg')
-            set_PV(self.pvharm1turn2std, peakdata, f'harm1_turn{harm1highturn-1}_peak{harm1highturnpeak}_std')
-            
-            set_PV(self.pvharm2turn1, peakdata, f'harm2_turn0_peak{harm2lowturnpeak}')
-            set_PV(self.pvharm2turn1avg, peakdata, f'harm2_turn0_peak{harm2lowturnpeak}_avg')
-            set_PV(self.pvharm2turn1std, peakdata, f'harm2_turn0_peak{harm2lowturnpeak}_std')
-            set_PV(self.pvharm2turn2, peakdata, f'harm2_turn{harm2highturn-1}_peak{harm2highturnpeak}')
-            set_PV(self.pvharm2turn2avg, peakdata, f'harm2_turn{harm2highturn-1}_peak{harm2highturnpeak}_avg')
-            set_PV(self.pvharm2turn2std, peakdata, f'harm2_turn{harm2highturn-1}_peak{harm2highturnpeak}_std')
+            for t, p, pvraw, pvavg, pvstd, in zip(harm1turns, harm1peaks, self.pvharm1, self.pvharm1avg, self.pvharm1std):
+                set_PV(pvraw, peakdata, f'harm1_turn{t-1}_peak{p}')
+                set_PV(pvavg, peakdata, f'harm1_turn{t-1}_peak{p}_avg')
+                set_PV(pvstd, peakdata, f'harm1_turn{t-1}_peak{p}_std')
+
+            for t, p, pvraw, pvavg, pvstd, in zip(harm2turns, harm2peaks, self.pvharm2, self.pvharm2avg, self.pvharm2std):
+                set_PV(pvraw, peakdata, f'harm2_turn{t-1}_peak{p}')
+                set_PV(pvavg, peakdata, f'harm2_turn{t-1}_peak{p}_avg')
+                set_PV(pvstd, peakdata, f'harm2_turn{t-1}_peak{p}_std')
             
             set_PV(self.pvlaserpos, peakdata, 'laser_position')
             set_PV(self.pvlasermax, peakdata, 'laser_maximum')
             set_PV(self.pvavglen, peakdata, 'averaging_length_harm1') # TODO there are different avglens for harm1,2 in peakdata, can they really be different?
             set_PV(self.pvpeakpos, peakdata, 'centerpeak_pos')
             
-    def update_turnparameters(self, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0, harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0):
+    def update_turnparameters(self, harm1turns=[1,2,3], harm1peaks=[0,0,0], harm2turns=[1,2,3], harm2peaks=[0,0,0]):
         """
         Update the SSMB PVs with new turn number and peak number parameters.
 
@@ -184,13 +141,13 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            self.pvharm1turn1peaknr.put(harm1lowturnpeak)
-            self.pvharm1turn2peaknr.put(harm1highturnpeak)
-            self.pvharm1turn2turnnr.put(harm1highturn)
-            
-            self.pvharm2turn1peaknr.put(harm2lowturnpeak)
-            self.pvharm2turn2peaknr.put(harm2highturnpeak)
-            self.pvharm2turn2turnnr.put(harm2highturn)
+            for t, p, pvturn, pvpeak, in zip(harm1turns, harm1peaks, self.pvharm1turnnr, self.pvharm1peaknr):
+                set_PV(pvturn, peakdata, t)
+                set_PV(pvpeak, peakdata, p)
+
+            for t, p, pvturn, pvpeak, in zip(harm2turns, harm2peaks, self.pvharm2turnnr, self.pvharm2peaknr):
+                set_PV(pvturn, peakdata, t)
+                set_PV(pvpeak, peakdata, p)
                      
     def zero(self):
         """
@@ -205,22 +162,22 @@ class SSMBPVs:
             self.pvharm1turn1.put(0)
             self.pvharm1turn1avg.put(0)
             self.pvharm1turn1std.put(0)
-            self.pvharm1turn2.put(0)
-            self.pvharm1turn2avg.put(0)
-            self.pvharm1turn2std.put(0)
+            self.pvharm1.put(0)
+            self.pvharm1avg.put(0)
+            self.pvharm1std.put(0)
             self.pvharm1turn1peaknr.put(0)
-            self.pvharm1turn2peaknr.put(0)
-            self.pvharm1turn2turnnr.put(0)
+            self.pvharm1peaknr.put(0)
+            self.pvharm1turnnr.put(0)
             
             self.pvharm2turn1.put(0)
             self.pvharm2turn1avg.put(0)
             self.pvharm2turn1std.put(0)
-            self.pvharm2turn2.put(0)
-            self.pvharm2turn2avg.put(0)
-            self.pvharm2turn2std.put(0)
+            self.pvharm2.put(0)
+            self.pvharm2avg.put(0)
+            self.pvharm2std.put(0)
             self.pvharm2turn1peaknr.put(0)
-            self.pvharm2turn2peaknr.put(0)
-            self.pvharm2turn2turnnr.put(0)
+            self.pvharm2peaknr.put(0)
+            self.pvharm2turnnr.put(0)
             
             self.pvlaserpos.put(0)
             self.pvlasermax.put(0)
@@ -246,10 +203,10 @@ class SSMBEpics:
     '''
     Wrapper class to manage the EPICS access for the SSMBLiveEvaluation application
     '''
-    def __init__(self, harm1highturn=2, harm1lowturnpeak=0, harm1highturnpeak=0, harm2highturn=2, harm2lowturnpeak=0, harm2highturnpeak=0, demo_mode=False):
+    def __init__(self, harm1turns=[1,2,3], harm1peaks=[0,0,0], harm2turns=[1,2,3], harm2peaks=[0,0,0], demo_mode=False):
         self.PV = SSMBPVs(demo_mode=demo_mode) # PV access object
         self.data_queue = queue.Queue() # create queue for data input to be written to EPICS
-        self.set_turn_parameters(harm1highturn, harm1lowturnpeak, harm1highturnpeak, harm2highturn, harm2lowturnpeak, harm2highturnpeak)
+        self.set_turn_parameters(harm1turns, harm1peaks, harm2turns, harm2peaks)
         self.go = False
         self.__thread = threading.Thread(target=self.__pv_loop)
         
@@ -260,20 +217,18 @@ class SSMBEpics:
     def stop(self):
         self.go = False
     
-    def set_turn_parameters(self, harm1highturn, harm1lowturnpeak, harm1highturnpeak, harm2highturn, harm2lowturnpeak, harm2highturnpeak):
-        self.harm1highturn = harm1highturn
-        self.harm1lowturnpeak = harm1lowturnpeak
-        self.harm1highturnpeak = harm1highturnpeak
-        self.harm2highturn = harm2highturn
-        self.harm2lowturnpeak = harm2lowturnpeak
-        self.harm2highturnpeak = harm2highturnpeak
-        self.PV.update_turnparameters(harm1highturn, harm1lowturnpeak, harm1highturnpeak, harm2highturn, harm2lowturnpeak, harm2highturnpeak)
+    def set_turn_parameters(self, harm1turns, harm1peaks, harm2turns, harm2peaks):
+        self.harm1turns = harm1turns
+        self.harm1peaks = harm1peaks
+        self.harm2turns = harm2turns
+        self.harm2peaks = harm2peaks
+        self.PV.update_turnparameters(harm1turns, harm1peaks, harm2turns, harm2peaks)
         
     def __pv_loop(self):
         while self.go:
             try:
                 data = self.data_queue.get(timeout = 1) # wait for new data with 1 second timeout to check for self.go
-                self.PV.update(data, self.harm1highturn, self.harm1lowturnpeak, self.harm1highturnpeak, self.harm2highturn, self.harm2lowturnpeak, self.harm2highturnpeak)
+                self.PV.update(data, self.harm1turns, self.harm1peaks, self.harm2turns, self.harm2peaks)
             except queue.Empty:
                 pass # no new data, continue waiting.
         

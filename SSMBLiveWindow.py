@@ -154,12 +154,20 @@ class SSMBWindow(tk.Frame):
         self.__harm2scaledownBtn.grid(row=0, column=5, rowspan=2)
         
         ### Turn and peak selection boxes for first harmonic ###
+        tk.Label(self.__frame_harm1, text='peak marker #1', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=3, column=1, columnspan=2)
         self.__harm1t1_peak = tk.IntVar(self.master, value=0)
         self.__harm1t1_peakBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t1_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm1t1_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
         self.__harm1t1_peakBox.grid(row=5, column=2)
         tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=1, sticky=tk.E)
         
+        self.__harm1t1_turn = tk.IntVar(self.master, value=1)
+        self.__harm1t1_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t1_turn, values=[1,2,3], state='readonly', width=4)
+        self.__harm1t1_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
+        self.__harm1t1_turnBox.grid(row=4, column=2)
+        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=1, sticky=tk.E)
+        
+        tk.Label(self.__frame_harm1, text='peak marker #2', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=3, column=6, columnspan=2)
         self.__harm1t2_peak = tk.IntVar(self.master, value=0)
         self.__harm1t2_peakBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t2_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm1t2_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
@@ -167,10 +175,23 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=6, sticky=tk.E)
         
         self.__harm1t2_turn = tk.IntVar(self.master, value=2)
-        self.__harm1t2_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t2_turn, values=[2,3,4], state='readonly', width=4)
+        self.__harm1t2_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t2_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm1t2_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
         self.__harm1t2_turnBox.grid(row=4, column=7)
         tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=6, sticky=tk.E)
+        
+        tk.Label(self.__frame_harm1, text='peak marker #3', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=3, column=8, columnspan=2)
+        self.__harm1t3_peak = tk.IntVar(self.master, value=1)
+        self.__harm1t3_peakBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t3_peak, values=[-1,0,1], state='readonly', width=4)
+        self.__harm1t3_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
+        self.__harm1t3_peakBox.grid(row=5, column=9)
+        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=8, sticky=tk.E)
+        
+        self.__harm1t3_turn = tk.IntVar(self.master, value=1)
+        self.__harm1t3_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t3_turn, values=[1,2,3], state='readonly', width=4)
+        self.__harm1t3_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
+        self.__harm1t3_turnBox.grid(row=4, column=9)
+        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=8, sticky=tk.E)
         
         ### Result display Entries for first harmonic ###
         self.__harm1t1_peakampl = tk.StringVar(self.master, value=0)
@@ -203,13 +224,36 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=8, column=6, columnspan=2, sticky=tk.S)
         tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=10, column=6, columnspan=2, sticky=tk.S)
         
+        self.__harm1t3_peakampl = tk.StringVar(self.master, value=0)
+        self.__harm1t3_avgampl = tk.StringVar(self.master, value=0)
+        self.__harm1t3_fluctuation = tk.StringVar(self.master, value=0)
+                
+        self.__harm1t3_peakamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t3_peakampl, state='readonly', width=11)
+        self.__harm1t3_peakamplEtr.grid(row=7, column=8, columnspan=2)
+        self.__harm1t3_avgamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t3_avgampl, state='readonly', width=11)
+        self.__harm1t3_avgamplEtr.grid(row=9, column=8, columnspan=2)
+        self.__harm1t3_fluctuationEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t3_fluctuation, state='readonly', width=11)
+        self.__harm1t3_fluctuationEtr.grid(row=11, column=8, columnspan=2)
+        
+        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=6, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=8, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=10, column=8, columnspan=2, sticky=tk.S)
+        
         ### Turn and peak selection boxes for second harmonic ###
+        tk.Label(self.__frame_harm2, text='peak marker #1', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=3, column=1, columnspan=2)
         self.__harm2t1_peak = tk.IntVar(self.master, value=0)
         self.__harm2t1_peakBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t1_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm2t1_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
         self.__harm2t1_peakBox.grid(row=5, column=2)
         tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=1, sticky=tk.E)
         
+        self.__harm2t1_turn = tk.IntVar(self.master, value=1)
+        self.__harm2t1_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t1_turn, values=[1,2,3], state='readonly', width=4)
+        self.__harm2t1_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
+        self.__harm2t1_turnBox.grid(row=4, column=2)
+        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=1, sticky=tk.E)
+        
+        tk.Label(self.__frame_harm2, text='peak marker #2', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=3, column=6, columnspan=2)
         self.__harm2t2_peak = tk.IntVar(self.master, value=0)
         self.__harm2t2_peakBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t2_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm2t2_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
@@ -217,10 +261,23 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=6, sticky=tk.E)
         
         self.__harm2t2_turn = tk.IntVar(self.master, value=2)
-        self.__harm2t2_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t2_turn, values=[2,3,4], state='readonly', width=4)
+        self.__harm2t2_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t2_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm2t2_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
         self.__harm2t2_turnBox.grid(row=4, column=7)
         tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=6, sticky=tk.E)
+        
+        tk.Label(self.__frame_harm2, text='peak marker #3', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=3, column=8, columnspan=2)
+        self.__harm2t3_peak = tk.IntVar(self.master, value=1)
+        self.__harm2t3_peakBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t3_peak, values=[-1,0,1], state='readonly', width=4)
+        self.__harm2t3_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
+        self.__harm2t3_peakBox.grid(row=5, column=9)
+        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=8, sticky=tk.E)
+        
+        self.__harm2t3_turn = tk.IntVar(self.master, value=1)
+        self.__harm2t3_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t3_turn, values=[1,2,3], state='readonly', width=4)
+        self.__harm2t3_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
+        self.__harm2t3_turnBox.grid(row=4, column=9)
+        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=8, sticky=tk.E)
         
         ### Result display Entries for second harmonic ###
         self.__harm2t1_peakampl = tk.StringVar(self.master, value=0)
@@ -252,6 +309,22 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=6, column=6, columnspan=2, sticky=tk.S)
         tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=8, column=6, columnspan=2, sticky=tk.S)
         tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=10, column=6, columnspan=2, sticky=tk.S)
+        
+        self.__harm2t3_peakampl = tk.StringVar(self.master, value=0)
+        self.__harm2t3_avgampl = tk.StringVar(self.master, value=0)
+        self.__harm2t3_fluctuation = tk.StringVar(self.master, value=0)
+                
+        self.__harm2t3_peakamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t3_peakampl, state='readonly', width=11)
+        self.__harm2t3_peakamplEtr.grid(row=7, column=8, columnspan=2)
+        self.__harm2t3_avgamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t3_avgampl, state='readonly', width=11)
+        self.__harm2t3_avgamplEtr.grid(row=9, column=8, columnspan=2)
+        self.__harm2t3_fluctuationEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t3_fluctuation, state='readonly', width=11)
+        self.__harm2t3_fluctuationEtr.grid(row=11, column=8, columnspan=2)
+                
+        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=6, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=8, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=10, column=8, columnspan=2, sticky=tk.S)
+        
         
         ### Evaluation configuration panel ###
         self.__config_focus_cache = 0 # storage for value before focus was obtained, to be restored if focus is lost
@@ -542,21 +615,34 @@ class SSMBWindow(tk.Frame):
     def __update_epics_parameters(self, event=None):
         if self.__testing_mode:
             print('TESTING: changing EPICS parameters...')
-        self._epics.set_turn_parameters(self.__harm1t2_turn.get(), self.__harm1t1_peak.get(),
-                                        self.__harm1t2_peak.get(), self.__harm2t2_turn.get(),
-                                        self.__harm2t1_peak.get(),self.__harm2t2_peak.get())
+        self._epics.set_turn_parameters([self.__harm1t1_turn.get(), self.__harm1t2_turn.get(), self.__harm1t3_turn.get()],
+                                        [self.__harm1t1_peak.get(), self.__harm1t2_peak.get(), self.__harm1t3_peak.get()],
+                                        [self.__harm2t1_turn.get(), self.__harm2t2_turn.get(), self.__harm2t3_turn.get()],
+                                        [self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), self.__harm2t3_peak.get()])
     
     def __update_turns(self, event):
         maxt = self.__config_maxrev.get()
         self._analyzer.parameter_queue.put(['turns', maxt])
         
-        turnlist = list(range(2,maxt+1))
+        turnlist = list(range(1,maxt+1))
+        self.__harm1t1_turnBox.configure(values=turnlist)
+        if self.__harm1t1_turn.get() > maxt:
+            self.__harm1t1_turn.set(maxt)
+        self.__harm2t1_turnBox.configure(values=turnlist)
+        if self.__harm2t1_turn.get() > maxt:
+            self.__harm2t1_turn.set(maxt)
         self.__harm1t2_turnBox.configure(values=turnlist)
         if self.__harm1t2_turn.get() > maxt:
             self.__harm1t2_turn.set(maxt)
         self.__harm2t2_turnBox.configure(values=turnlist)
         if self.__harm2t2_turn.get() > maxt:
             self.__harm2t2_turn.set(maxt)
+        self.__harm1t3_turnBox.configure(values=turnlist)
+        if self.__harm1t3_turn.get() > maxt:
+            self.__harm1t3_turn.set(maxt)
+        self.__harm2t3_turnBox.configure(values=turnlist)
+        if self.__harm2t3_turn.get() > maxt:
+            self.__harm2t3_turn.set(maxt)
         self.__update_epics_parameters()
     
     def __update_peaks(self, event):
@@ -724,15 +810,15 @@ class SSMBWindow(tk.Frame):
         
     def refresh_display(self, traceanalyzer, peakdata, centerpeakpos, analysislength):
         try:
-            self.__harm1t1_peakampl.set(format_volts(peakdata[f'harm1_turn0_peak{self.__harm1t1_peak.get()}']))
+            self.__harm1t1_peakampl.set(format_volts(peakdata[f'harm1_turn{self.__harm1t1_turn.get()-1}_peak{self.__harm1t1_peak.get()}']))
         except KeyError:
             self.__harm1t1_peakampl.set('no data')
         try:
-            self.__harm1t1_avgampl.set(format_volts(peakdata[f'harm1_turn0_peak{self.__harm1t1_peak.get()}_avg']))
+            self.__harm1t1_avgampl.set(format_volts(peakdata[f'harm1_turn{self.__harm1t1_turn.get()-1}_peak{self.__harm1t1_peak.get()}_avg']))
         except KeyError:
             self.__harm1t1_avgampl.set('no data')
         try:
-            self.__harm1t1_fluctuation.set(format_volts(peakdata[f'harm1_turn0_peak{self.__harm1t1_peak.get()}_std']))
+            self.__harm1t1_fluctuation.set(format_volts(peakdata[f'harm1_turn{self.__harm1t1_turn.get()-1}_peak{self.__harm1t1_peak.get()}_std']))
         except KeyError:
             self.__harm1t1_fluctuation.set('no data')
         
@@ -748,17 +834,31 @@ class SSMBWindow(tk.Frame):
             self.__harm1t2_fluctuation.set(format_volts(peakdata[f'harm1_turn{self.__harm1t2_turn.get()-1}_peak{self.__harm1t2_peak.get()}_std']))
         except KeyError:
             self.__harm1t2_fluctuation.set('no data')
+            
+        try:
+            self.__harm1t3_peakampl.set(format_volts(peakdata[f'harm1_turn{self.__harm1t3_turn.get()-1}_peak{self.__harm1t3_peak.get()}']))
+        except KeyError:
+            self.__harm1t3_peakampl.set('no data')        
+        try:
+            self.__harm1t3_avgampl.set(format_volts(peakdata[f'harm1_turn{self.__harm1t3_turn.get()-1}_peak{self.__harm1t3_peak.get()}_avg']))
+        except KeyError:
+            self.__harm1t3_avgampl.set('no data')            
+        try:
+            self.__harm1t3_fluctuation.set(format_volts(peakdata[f'harm1_turn{self.__harm1t3_turn.get()-1}_peak{self.__harm1t3_peak.get()}_std']))
+        except KeyError:
+            self.__harm1t3_fluctuation.set('no data')
+        
         
         try:
-            self.__harm2t1_peakampl.set(format_volts(peakdata[f'harm2_turn0_peak{self.__harm2t1_peak.get()}']))
+            self.__harm2t1_peakampl.set(format_volts(peakdata[f'harm2_turn{self.__harm2t1_turn.get()-1}_peak{self.__harm2t1_peak.get()}']))
         except KeyError:
             self.__harm2t1_peakampl.set('no data')
         try:
-            self.__harm2t1_avgampl.set(format_volts(peakdata[f'harm2_turn0_peak{self.__harm2t1_peak.get()}_avg']))
+            self.__harm2t1_avgampl.set(format_volts(peakdata[f'harm2_turn{self.__harm2t1_turn.get()-1}_peak{self.__harm2t1_peak.get()}_avg']))
         except KeyError:
             self.__harm2t1_avgampl.set('no data')
         try:
-            self.__harm2t1_fluctuation.set(format_volts(peakdata[f'harm2_turn0_peak{self.__harm2t1_peak.get()}_std']))
+            self.__harm2t1_fluctuation.set(format_volts(peakdata[f'harm2_turn{self.__harm2t1_turn.get()-1}_peak{self.__harm2t1_peak.get()}_std']))
         except KeyError:
             self.__harm2t1_fluctuation.set('no data')
         
@@ -774,6 +874,20 @@ class SSMBWindow(tk.Frame):
             self.__harm2t2_fluctuation.set(format_volts(peakdata[f'harm2_turn{self.__harm2t2_turn.get()-1}_peak{self.__harm2t2_peak.get()}_std']))
         except KeyError:
             self.__harm2t2_fluctuation.set('no data')
+            
+        try:
+            self.__harm2t3_peakampl.set(format_volts(peakdata[f'harm2_turn{self.__harm2t3_turn.get()-1}_peak{self.__harm2t3_peak.get()}']))
+        except KeyError:
+            self.__harm2t3_peakampl.set('no data')
+        try:
+            self.__harm2t3_avgampl.set(format_volts(peakdata[f'harm2_turn{self.__harm2t3_turn.get()-1}_peak{self.__harm2t3_peak.get()}_avg']))
+        except KeyError:
+            self.__harm2t3_avgampl.set('no data')
+        try:
+            self.__harm2t3_fluctuation.set(format_volts(peakdata[f'harm2_turn{self.__harm2t3_turn.get()-1}_peak{self.__harm2t3_peak.get()}_std']))
+        except KeyError:
+            self.__harm2t3_fluctuation.set('no data')
+        
         
         if self.__config_centerposmode != 'manual':
             if centerpeakpos is None:
@@ -783,8 +897,10 @@ class SSMBWindow(tk.Frame):
         self.__logging_numsaved.set(analysislength)
         if self.plotting:
             self._plt.redraw(traceanalyzer,
-                            self.__harm1t2_turn.get(), self.__harm1t1_peak.get(), self.__harm1t2_peak.get(),
-                            self.__harm2t2_turn.get(), self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), centerpeakpos,
+                            [self.__harm1t1_turn.get(), self.__harm1t2_turn.get(), self.__harm1t3_turn.get()],
+                            [self.__harm1t1_peak.get(), self.__harm1t2_peak.get(), self.__harm1t3_peak.get()],
+                            [self.__harm2t1_turn.get(), self.__harm2t2_turn.get(), self.__harm2t3_turn.get()],
+                            [self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), self.__harm2t3_peak.get()], centerpeakpos,
                             timecolumn=self.__column_time, harm1column=self.__column_harm1, harm2column=self.__column_harm2, triggercolumn=self.__column_trigger)
 	
     def __toggle_plotting(self):
