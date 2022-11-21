@@ -142,12 +142,12 @@ class SSMBPVs:
         """
         if not self.__demo:
             for t, p, pvturn, pvpeak, in zip(harm1turns, harm1peaks, self.pvharm1turnnr, self.pvharm1peaknr):
-                set_PV(pvturn, peakdata, t)
-                set_PV(pvpeak, peakdata, p)
+                pvturn.put(t)
+                pvpeak.put(p)
 
             for t, p, pvturn, pvpeak, in zip(harm2turns, harm2peaks, self.pvharm2turnnr, self.pvharm2peaknr):
-                set_PV(pvturn, peakdata, t)
-                set_PV(pvpeak, peakdata, p)
+                pvturn.put(t)
+                pvpeak.put(p)
                      
     def zero(self):
         """
@@ -159,25 +159,15 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            self.pvharm1turn1.put(0)
-            self.pvharm1turn1avg.put(0)
-            self.pvharm1turn1std.put(0)
-            self.pvharm1.put(0)
-            self.pvharm1avg.put(0)
-            self.pvharm1std.put(0)
-            self.pvharm1turn1peaknr.put(0)
-            self.pvharm1peaknr.put(0)
-            self.pvharm1turnnr.put(0)
-            
-            self.pvharm2turn1.put(0)
-            self.pvharm2turn1avg.put(0)
-            self.pvharm2turn1std.put(0)
-            self.pvharm2.put(0)
-            self.pvharm2avg.put(0)
-            self.pvharm2std.put(0)
-            self.pvharm2turn1peaknr.put(0)
-            self.pvharm2peaknr.put(0)
-            self.pvharm2turnnr.put(0)
+            for pvraw, pvavg, pvstd, in zip(self.pvharm1, self.pvharm1avg, self.pvharm1std):
+                pvraw.put(0)
+                pvavg.put(0)
+                pvstd.put(0)
+
+            for pvraw, pvavg, pvstd, in zip(self.pvharm2, self.pvharm2avg, self.pvharm2std):
+                pvraw.put(0)
+                pvavg.put(0)
+                pvstd.put(0)
             
             self.pvlaserpos.put(0)
             self.pvlasermax.put(0)

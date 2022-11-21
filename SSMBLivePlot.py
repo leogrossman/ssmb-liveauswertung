@@ -48,7 +48,7 @@ class SSMBPlotting:
             return self.__canvases_detail[harm-1][turn-1]
     
     def redraw(self, traceanalyzer, harm1turns=[1,2,3], harm1peaks=[0,0,0], harm2turns=[1,2,3], harm2peaks=[0,0,0], centerpeak_pos=None,
-               timecolumn = 'TIME', harm1column = 'CH3', harm2column = 'CH4', triggercolumn = 'CH2', plotlenOverview = 200, plotlenDetail=200):
+               timecolumn = 'TIME', harm1column = 'CH3', harm2column = 'CH4', triggercolumn = 'CH2', maxturns = 2):#, plotlenOverview = 200, plotlenDetail=200):
         """
         Redraw all plots with new data.
 
@@ -86,6 +86,7 @@ class SSMBPlotting:
         """
         ### Overview plots for first and second harmonic ###
         for fig, fig12, harm, turns, peaks in zip(self.__figures_overview, self.__figures_detail, [1,2], [harm1turns, harm2turns], [harm1peaks, harm2peaks]):
+            # first, determine the two lowest selected turns for plotting
             turnset = set(turns)
             turn1 = min(turnset)
             turnset.remove(turn1)
@@ -93,18 +94,24 @@ class SSMBPlotting:
                 turn2 = min(turnset)
             except ValueError:
                 turn2 = turn1 + 1
+            if turn1 > maxturns:
+                turn1 = maxturns
+            if turn2 > maxturns:
+                turn2 = maxturns
+            turn1 -= 1 # go from 1.. to 0..
+            turn2 -= 1 
             try:
                 plt.figure(fig.number)
                 fig.clear()
                 ax1 = plt.gca()
                 ax2 = plt.twinx()
                 
-                windowstart, windowend = traceanalyzer.get_window_times(turn1-1)
+                windowstart, windowend = traceanalyzer.get_window_times(turn1)
                 ax1.axvspan(windowstart, windowend, color='r', alpha=0.5)
                 if centerpeak_pos is not None:
                     ax1.axvline(windowstart+centerpeak_pos, color='k')
                     
-                windowstart, windowend = traceanalyzer.get_window_times(turn2-1)
+                windowstart, windowend = traceanalyzer.get_window_times(turn2)
                 ax1.axvspan(windowstart, windowend, color='r', alpha=0.5)
                 if centerpeak_pos is not None:
                     ax1.axvline(windowstart+centerpeak_pos, color='k')
@@ -136,7 +143,7 @@ class SSMBPlotting:
                     if centerpeak_pos is not None:
                         plt.axvline(windowstart+centerpeak_pos, color='k')
                         for peak, peakturn in zip(peaks, turns):
-                            if peakturn == turn:
+                            if peakturn-1 == turn:
                                 plt.axvline(windowstart+centerpeak_pos+peak*2, color='r', ls='--')
                     plt.plot(traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C3' if harm==2 else 'C1')
                     plt.plot(traceanalyzer.get_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C2' if harm==2 else 'C0', alpha=0.8)

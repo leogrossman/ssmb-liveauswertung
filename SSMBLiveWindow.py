@@ -900,7 +900,8 @@ class SSMBWindow(tk.Frame):
                             [self.__harm1t1_turn.get(), self.__harm1t2_turn.get(), self.__harm1t3_turn.get()],
                             [self.__harm1t1_peak.get(), self.__harm1t2_peak.get(), self.__harm1t3_peak.get()],
                             [self.__harm2t1_turn.get(), self.__harm2t2_turn.get(), self.__harm2t3_turn.get()],
-                            [self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), self.__harm2t3_peak.get()], centerpeakpos,
+                            [self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), self.__harm2t3_peak.get()],
+                            centerpeakpos, maxturns=self.__config_maxrev.get(),
                             timecolumn=self.__column_time, harm1column=self.__column_harm1, harm2column=self.__column_harm2, triggercolumn=self.__column_trigger)
 	
     def __toggle_plotting(self):
