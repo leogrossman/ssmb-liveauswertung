@@ -56,18 +56,14 @@ class SSMBPlotting:
         ----------
         traceanalyzer : SSMBTraceAnalyzer object
             containing the new SSMB data trace.
-        harm1highturn : int, optional
-            turn number for the higher turn plot for the first harmonic. The default is 2.
-        harm1lowturnpeak : int, optional
-            selected peak number in the analysis for first harmonic, first turn. The default is 0.
-        harm1highturnpeak : int, optional
-            selected peak number in the analysis for first harmonic, higher turn. The default is 0.
-        harm2highturn : int, optional
-            turn number for the higher turn plot for the second harmonic. The default is 2.
-        harm2lowturnpeak : int, optional
-            selected peak number in the analysis for second harmonic, first turn. The default is 0.
-        harm2highturnpeak : int, optional
-            selected peak number in the analysis for second harmonic, higher turn. The default is 0.
+        harm1turns : list of ints, optional
+            selected turn numbers to be marked in the plots for the first harmonic. The default is [1,2,3].
+        harm1peaks : list of ints, optional
+            selected peak numbers to be marked in the plots for the first harmonic. The default is [0,0,0].
+        harm2turns : list of ints, optional
+            selected turn numbers to be marked in the plots for the second harmonic. The default is [1,2,3].
+        harm1peaks : list of ints, optional
+            selected peak numbers to be marked in the plots for the first harmonic. The default is [0,0,0].
         centerpeak_pos : float, optional
             position of the central peak in the evaluation. The default is None (not plotted).
         timecolumn : str, optional

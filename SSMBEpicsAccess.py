@@ -32,7 +32,6 @@ class SSMBPVs:
             ### RF frequency readback PV to get bunch spacing
             self.pvfrf = PV('MCLKHGP:rdFrq499')
             
-            basic = False # True: val1..val30, False: proper names
             ### PV name fragments ###
             IOC_NAME = 'SCOPE1ZULP' # TBD
             SEP1 = ':'
@@ -78,20 +77,14 @@ class SSMBPVs:
         ----------
         peakdata : dictionary
             containing the new analyzed SSMB data.
-        harm1highturn : int, optional
-            turn number for the higher turn plot for the first harmonic. The default is 2.
-        harm1lowturnpeak : int, optional
-            selected peak number in the analysis for first harmonic, first turn. The default is 0.
-        harm1highturnpeak : int, optional
-            selected peak number in the analysis for first harmonic, higher turn. The default is 0.
-        harm2highturn : int, optional
-            turn number for the higher turn plot for the second harmonic. The default is 2.
-        harm2lowturnpeak : int, optional
-            selected peak number in the analysis for second harmonic, first turn. The default is 0.
-        harm2highturnpeak : int, optional
-            selected peak number in the analysis for second harmonic, higher turn. The default is 0.
-        centerpeak_pos : float, optional
-            position of the central peak in the evaluation. The default is None (not plotted).
+        harm1turns : list of ints, optional
+            selected turn numbers to be output for h1p1, h1p2, h1p3 for the first harmonic. The default is [1,2,3].
+        harm1peaks : list of ints, optional
+            selected peak numbers to be output for h1p1, h1p2, h1p3 for the first harmonic. The default is [0,0,0].
+        harm2turns : list of ints, optional
+            selected turn numbers to be output for h2p1, h2p2, h2p3 for the second harmonic. The default is [1,2,3].
+        harm1peaks : list of ints, optional
+            selected peak numbers to be output for h2p1, h2p2, h2p3 for the first harmonic. The default is [0,0,0].
 
         Returns
         -------
@@ -99,12 +92,12 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            for t, p, pvraw, pvavg, pvstd, in zip(harm1turns, harm1peaks, self.pvharm1, self.pvharm1avg, self.pvharm1std):
+            for t, p, pvraw, pvavg, pvstd in zip(harm1turns, harm1peaks, self.pvharm1, self.pvharm1avg, self.pvharm1std):
                 set_PV(pvraw, peakdata, f'harm1_turn{t-1}_peak{p}')
                 set_PV(pvavg, peakdata, f'harm1_turn{t-1}_peak{p}_avg')
                 set_PV(pvstd, peakdata, f'harm1_turn{t-1}_peak{p}_std')
 
-            for t, p, pvraw, pvavg, pvstd, in zip(harm2turns, harm2peaks, self.pvharm2, self.pvharm2avg, self.pvharm2std):
+            for t, p, pvraw, pvavg, pvstd in zip(harm2turns, harm2peaks, self.pvharm2, self.pvharm2avg, self.pvharm2std):
                 set_PV(pvraw, peakdata, f'harm2_turn{t-1}_peak{p}')
                 set_PV(pvavg, peakdata, f'harm2_turn{t-1}_peak{p}_avg')
                 set_PV(pvstd, peakdata, f'harm2_turn{t-1}_peak{p}_std')
@@ -120,32 +113,25 @@ class SSMBPVs:
 
         Parameters
         ----------
-        harm1highturn : int, optional
-            turn number for the higher turn plot for the first harmonic. The default is 2.
-        harm1lowturnpeak : int, optional
-            selected peak number in the analysis for first harmonic, first turn. The default is 0.
-        harm1highturnpeak : int, optional
-            selected peak number in the analysis for first harmonic, higher turn. The default is 0.
-        harm2highturn : int, optional
-            turn number for the higher turn plot for the second harmonic. The default is 2.
-        harm2lowturnpeak : int, optional
-            selected peak number in the analysis for second harmonic, first turn. The default is 0.
-        harm2highturnpeak : int, optional
-            selected peak number in the analysis for second harmonic, higher turn. The default is 0.
-        centerpeak_pos : float, optional
-            position of the central peak in the evaluation. The default is None (not plotted).
-
+        harm1turns : list of ints, optional
+            selected turn numbers to be output for h1p1, h1p2, h1p3 for the first harmonic. The default is [1,2,3].
+        harm1peaks : list of ints, optional
+            selected peak numbers to be output for h1p1, h1p2, h1p3 for the first harmonic. The default is [0,0,0].
+        harm2turns : list of ints, optional
+            selected turn numbers to be output for h2p1, h2p2, h2p3 for the second harmonic. The default is [1,2,3].
+        harm1peaks : list of ints, optional
+            selected peak numbers to be output for h2p1, h2p2, h2p3 for the first harmonic. The default is [0,0,0].
         Returns
         -------
         None.
 
         """
         if not self.__demo:
-            for t, p, pvturn, pvpeak, in zip(harm1turns, harm1peaks, self.pvharm1turnnr, self.pvharm1peaknr):
+            for t, p, pvturn, pvpeak in zip(harm1turns, harm1peaks, self.pvharm1turnnr, self.pvharm1peaknr):
                 pvturn.put(t)
                 pvpeak.put(p)
 
-            for t, p, pvturn, pvpeak, in zip(harm2turns, harm2peaks, self.pvharm2turnnr, self.pvharm2peaknr):
+            for t, p, pvturn, pvpeak in zip(harm2turns, harm2peaks, self.pvharm2turnnr, self.pvharm2peaknr):
                 pvturn.put(t)
                 pvpeak.put(p)
                      
@@ -159,16 +145,20 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            for pvraw, pvavg, pvstd, in zip(self.pvharm1, self.pvharm1avg, self.pvharm1std):
+            for pvraw, pvavg, pvstd pvturn, pvpeak in zip(self.pvharm1, self.pvharm1avg, self.pvharm1std, self.pvharm1turnnr, self.pvharm1peaknr):
                 pvraw.put(0)
                 pvavg.put(0)
                 pvstd.put(0)
-
-            for pvraw, pvavg, pvstd, in zip(self.pvharm2, self.pvharm2avg, self.pvharm2std):
+                pvturn.put(0)
+                pvpeak.put(0)
+                
+            for pvraw, pvavg, pvstd pvturn, pvpeak in zip(self.pvharm2, self.pvharm2avg, self.pvharm2std, self.pvharm2turnnr, self.pvharm2peaknr):
                 pvraw.put(0)
                 pvavg.put(0)
                 pvstd.put(0)
-            
+                pvturn.put(0)
+                pvpeak.put(0)
+                
             self.pvlaserpos.put(0)
             self.pvlasermax.put(0)
             self.pvavglen.put(0)
