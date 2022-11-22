@@ -145,14 +145,14 @@ class SSMBPVs:
 
         """
         if not self.__demo:
-            for pvraw, pvavg, pvstd pvturn, pvpeak in zip(self.pvharm1, self.pvharm1avg, self.pvharm1std, self.pvharm1turnnr, self.pvharm1peaknr):
+            for pvraw, pvavg, pvstd, pvturn, pvpeak in zip(self.pvharm1, self.pvharm1avg, self.pvharm1std, self.pvharm1turnnr, self.pvharm1peaknr):
                 pvraw.put(0)
                 pvavg.put(0)
                 pvstd.put(0)
                 pvturn.put(0)
                 pvpeak.put(0)
                 
-            for pvraw, pvavg, pvstd pvturn, pvpeak in zip(self.pvharm2, self.pvharm2avg, self.pvharm2std, self.pvharm2turnnr, self.pvharm2peaknr):
+            for pvraw, pvavg, pvstd, pvturn, pvpeak in zip(self.pvharm2, self.pvharm2avg, self.pvharm2std, self.pvharm2turnnr, self.pvharm2peaknr):
                 pvraw.put(0)
                 pvavg.put(0)
                 pvstd.put(0)
