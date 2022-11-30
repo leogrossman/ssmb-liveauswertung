@@ -79,15 +79,15 @@ def main():
     
 ##### read configuration #####
     cfg = configparser.ConfigParser()
-    cfg.read("ConfigSSMBSequenceAnalyzer.ini")
+    cfg.read("SSMBFileAnalysisConfig.ini")
     
     file_read_time_tolerance = 800
     try:
         file_read_time_tolerance = int(cfg['CURRENT']['file_read_time_tolerance'])
     except KeyError:
-        print(f'Warning: Config parameter "file_read_time_tolerance" not found in ini file "ConfigSSMBSequenceAnalyzer.ini", using default "{file_read_time_tolerance}"')
+        print(f'Warning: Config parameter "file_read_time_tolerance" not found in ini file "SSMBFileAnalysisConfig.ini", using default "{file_read_time_tolerance}"')
     except ValueError:
-        print(f'Warning: Config parameter "file_read_time_tolerance" in ini file "ConfigSSMBSequenceAnalyzer.ini" has invalid value, using default "{file_read_time_tolerance}"')
+        print(f'Warning: Config parameter "file_read_time_tolerance" in ini file "SSMBFileAnalysisConfig.ini" has invalid value, using default "{file_read_time_tolerance}"')
    
 ##### searching files to load #####
     print("Searching for files...")
