@@ -411,7 +411,16 @@ class SSMBWindow(tk.Frame):
         self.__acq_sequencenumEtr.grid(row=1, column=6, sticky=tk.W)
         
         tk.Label(self.__frame_saving, text='length', bg=self.__color_saving).grid(row=1, column=3, sticky=tk.E)
-        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=1, column=5, sticky=tk.E)        
+        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=1, column=5, sticky=tk.E)
+        
+        self.__acq_setup_name = tk.StringVar(self.master)
+        self.__acq_setupEtr = tk.Entry(self.__frame_saving, width=34, textvariable=self.__acq_setup_name)
+        self.__acq_setupEtr.grid(row=2, column=2, columnspan=4, padx=3)
+        tk.Label(self.__frame_saving, text='setup file path on scope', bg=self.__color_saving).grid(row=3, column=2, columnspan=4, sticky=tk.W)
+        
+        self.__acq_load_setupBtn = tk.Button(self.__frame_saving, text='Load setup', width=8, command=self.__acq_load_setup)
+        self.__acq_load_setupBtn.grid(row=2, column=6, padx=3)
+        
         
         ### Data saving panel ###
         tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=3, column=0)
@@ -433,7 +442,7 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_saving, text='Save raw data', bg=self.__color_saving, relief=tk.RAISED).grid(row=4, column=0, sticky=tk.W)        
         tk.Label(self.__frame_saving, text='saved traces', bg=self.__color_saving).grid(row=6, column=6, padx=3, sticky=tk.W)
         tk.Label(self.__frame_saving, text='path to folder', bg=self.__color_saving).grid(row=6, column=0, sticky=tk.W)
-        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=6, column=3, columnspan=2, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=6, column=3, columnspan=3, sticky=tk.W)
         
         self.__rawdata_saveBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__rawdata_save)
         self.__rawdata_saveBtn.grid(row=5, column=6, padx=3)
@@ -474,6 +483,11 @@ class SSMBWindow(tk.Frame):
         self._cfg.read(self.__cfg_name) # TODO config file is only found if python is called from the file directory!
         
         ### read file/path information for data saving from config file ###
+        try:
+            self.__acq_setup_name.set(self._cfg[self.__cfg_key]['setuppath'])
+        except KeyError:
+            print(f'Warning: Cannot recover last known scope setup path, key "setuppath" does not exist in configuration file "{self.__cfg_name}".')
+        
         try:
             self.__rawdata_path.set(self._cfg[self.__cfg_key]['savedest'])
         except KeyError:
@@ -909,7 +923,7 @@ class SSMBWindow(tk.Frame):
                             [self.__harm2t1_peak.get(), self.__harm2t2_peak.get(), self.__harm2t3_peak.get()],
                             centerpeakpos, maxturns=self.__config_maxrev.get(),
                             timecolumn=self.__column_time, harm1column=self.__column_harm1, harm2column=self.__column_harm2, triggercolumn=self.__column_trigger)
-	
+
     def __toggle_plotting(self):
         if self.plotting:
             self.plotting = False
@@ -917,7 +931,14 @@ class SSMBWindow(tk.Frame):
         else:
             self.plotting = True
             self.__doplottingBtn.configure(text = 'Plotting enabled', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
-			
+
+
+    def __acq_load_setup(self):
+        try:
+            self._ctrl.control_queue.put(['reset', self.__acq_setup_name.get()])
+        except AttributeError:
+            print('Warning: Tried to load scope setup, but the program backend has not started!')
+
 
     def __acq_run(self):
         try:
@@ -1032,7 +1053,8 @@ class SSMBWindow(tk.Frame):
                 self._cfg[self.__cfg_key]['centerpeak_pos'] = str(self.__config_centerpos.get())
             else:
                 self._cfg[self.__cfg_key]['centerpeak_pos'] = self.__config_centerposmode
-                
+            
+            self._cfg[self.__cfg_key]['setuppath'] = self.__acq_setup_name.get()
             self._cfg[self.__cfg_key]['savedest'] = self.__rawdata_path.get()
             self._cfg[self.__cfg_key]['logdest'] = self.__logging_path.get()
             
