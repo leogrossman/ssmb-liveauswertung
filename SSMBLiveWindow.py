@@ -550,14 +550,20 @@ class SSMBWindow(tk.Frame):
         self.__config_wincent.set(setparameters['windowcenter'])
         self.__config_winwidth.set(setparameters['windowwidth'])
         
-        turnlist = list(range(2,setparameters['maxturns']+1))
+        turnlist = list(range(1,setparameters['maxturns']+1))
+        self.__harm1t1_turnBox.configure(values=turnlist)
+        self.__harm2t1_turnBox.configure(values=turnlist)
         self.__harm1t2_turnBox.configure(values=turnlist)
         self.__harm2t2_turnBox.configure(values=turnlist)
+        self.__harm1t3_turnBox.configure(values=turnlist)
+        self.__harm2t3_turnBox.configure(values=turnlist)
         peaklist = list(range(-setparameters['sidepeaks'], setparameters['sidepeaks']+1))
         self.__harm1t1_peakBox.configure(values=peaklist)
-        self.__harm1t2_peakBox.configure(values=peaklist)
         self.__harm2t1_peakBox.configure(values=peaklist)
-        self.__harm2t2_peakBox.configure(values=peaklist)
+        self.__harm1t2_peakBox.configure(values=peaklist)
+        self.__harm2t2_peakBox.configure(values=peaklist)        
+        self.__harm1t3_peakBox.configure(values=peaklist)
+        self.__harm2t3_peakBox.configure(values=peaklist)
         
         ### get data column names for plotting ###
         try:
