@@ -8,6 +8,7 @@ Created on Mon Jul 19 11:45:00 2021
 import pandas as pd
 from datetime import datetime,timedelta
 from copy import deepcopy
+import numpy as np
 from matplotlib import pyplot as plt
 
 from SSMBTraceAnalyzer import TraceAnalyzer
@@ -98,6 +99,7 @@ class SequenceAnalyzer:
             self.windowcenter = windowcenter
             self.windowwidth = windowwidth
             self.averagecache = ([],[])
+            self.lasercache = []
             self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
             # we have to reset averaging and fluctuation calculation as the previous data does not fit anymore due to the changed window
     
@@ -203,6 +205,7 @@ class SequenceAnalyzer:
     def reset_sequence(self):
         self.chunk_index = 0
         self.averagecache = ([],[])
+        self.lasercache = []
         # define some columns known to exist to fix the order and avoid integer values being converted to float:
         self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
         self.peakdata = pd.DataFrame(columns=DFCOLUMNS)
@@ -277,7 +280,8 @@ class SequenceAnalyzer:
         if not currenttrace.compare_horizontal_info(*self.prev_horizontal_info) or currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
             # reset the averaging, reset the automatic centerpeak position and increment the chunk_index,
             # if either the horizontal scale has changed or the last trace is more than X seconds old
-            self.averagecache = ([],[])
+            self.averagecache = ([],[])            
+            self.lasercache = []
             self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
             if self.centerpeak_determination_automatic:
                 self.centerpeak_pos = None # reset the centerpeak_pos to "unknown" only for automatic determination
@@ -311,14 +315,24 @@ class SequenceAnalyzer:
         else:
             filename = 'direct data transfer'
         
-        # Determine laser position and setup output dictionary
+        # Determine laser position
         lasermax, laserpos = currenttrace.get_laser_maximum(self.laserthreshold)
-        md = dict(datetime=currentdatetime, filename=filename, chunk_index=self.chunk_index, centerpeak_pos = self.centerpeak_pos, laser_maximum=lasermax, laser_position=laserpos)
+        
+        # Average laser maximum and delete oldest items from lasercache
+        self.lasercache.append(lasermax)
+        lasermean = np.mean(self.lasercache)
+        avglendifflaser = len(self.lasercache) - (self.averaginglength-1)
+        if avglendifflaser > 0:
+            del self.lasercache[0:avglendifflaser]
+            
+        # Setup output dictionary
+        md = dict(datetime=currentdatetime, filename=filename, chunk_index=self.chunk_index, centerpeak_pos = self.centerpeak_pos, laser_maximum=lasermax, laser_position=laserpos, laser_maximum_avg=lasermean, averaging_length_laser=len(self.lasercache)+1)
         if modtime is not None:
             md.update({'modtime': modtime})
             
         # loop over harmonic (1 and 2)
         # for h in range(1,maxharmonic+1):
+        
         for h in range(1,3):
             
             if not currenttrace.harmonic_exists(h):
