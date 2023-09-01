@@ -14,7 +14,7 @@ import TektronixWfmImport as tek
 class TraceAnalyzer:
     
     def __init__(self, data=None, filepath=None, frf = 499.7e6, windowcenter_ns = 10, windowwidth_ns = 20,
-                 timecolumnname = "TIME", harm1columnname = "CH3", harm2columnname = "CH4", lasercolumnname = "CH1", invertharm1 = False, invertharm2 = False, invertlaser = False):
+                 timecolumnname = "TIME", harm1columnname = "CH3", harm2columnname = "CH4", lasercolumnname = "CH1", auxdatacolumnname="MATH2", invertharm1 = False, invertharm2 = False, invertlaser = False):
         """
         Initialize the Trace data from ``filepath`` or provide the ``data`` and define the ``windowcenter_ns`` and ``windowwidth_ns`` where the first turn signal is expected.
 
@@ -61,6 +61,7 @@ class TraceAnalyzer:
         self.timecolumn = timecolumnname
         self.harm1column = harm1columnname
         self.harm2column = harm2columnname
+        self.auxcolumn = auxdatacolumnname
         self.lasercolumn = lasercolumnname
         
         self.trace = None
@@ -338,19 +339,25 @@ class TraceAnalyzer:
         assert len(fittrace) > order
         return np.polyfit(fittrace[self.timecolumn], fittrace[datacolumn], order)
     
-    def calc_bg_correct(self, turn = 0, filtering=False, filterwidth = 51, fitwidth_ns = 10, fitorder=1, harmonic = 1):
+    def calc_bg_correct(self, turn = 0, filtering=True, filterwidth = 51, fitwidth_ns = 10, fitorder=1, harmonic = 1, filter_auxdata=False):
         datacolumn = self.harm2column if harmonic == 2 else self.harm1column
         
         windowtrace = self.trace[slice(*self.get_window(turn))].copy()
         if filtering:
             filtered = median_filter(windowtrace[datacolumn], filterwidth)
             windowtrace[datacolumn] -= filtered
+            if filter_auxdata:
+                try:
+                    filteredaux = median_filter(windowtrace[self.auxcolumn], filterwidth)
+                    windowtrace[self.auxcolumn] -= filteredaux
+                except:
+                    print('Warning: requested auxdata filtering failed')
         else:
             bgfit = self.calc_bg_fit(turn, fitwidth_ns, fitorder, harmonic)
             windowtrace[datacolumn] -= np.polyval(bgfit, windowtrace[self.timecolumn])
         return windowtrace
     
-    def do_bg_correct(self, filtering = False, filterwidth_ns = 2, maxturns = 10, fitwidth_ns = 10, fitorder=1, maxharmonic = 2):
+    def do_bg_correct(self, filtering = True, filterwidth_ns = 2, maxturns = 10, fitwidth_ns = 10, fitorder=1, maxharmonic = 2, filter_auxdata=False):
         """
         Do the background correction fits for up to ``maxturns`` turns, storing the resulting background corrected traces.
 
@@ -387,7 +394,7 @@ class TraceAnalyzer:
                 bgcorrectedtraces = []
                 try:
                     for t in range(maxturns):
-                        bgcorrectedtraces.append(self.calc_bg_correct(t, filtering, filterwidth, fitwidth_ns, fitorder, harmonic))
+                        bgcorrectedtraces.append(self.calc_bg_correct(t, filtering, filterwidth, fitwidth_ns, fitorder, harmonic, filter_auxdata))
                         # ^ raises AssertionError (from calc_bg_fit) if there is not enough data for the bg fit at turn t
                     if harmonic == 2:
                         self.bgcorrectedtraces2 = bgcorrectedtraces                
@@ -401,7 +408,6 @@ class TraceAnalyzer:
                             self.bgcorrectedtraces1 = bgcorrectedtraces
                     else:
                         raise RuntimeError("background fit failed for the first turn due to insufficient data points")
-                    #TODO do bgcorrectedtraces1/2 both contain all data columns?!? Is this needed somewhere?
         
     def get_bg_corrected_trace(self, turn = 0, harmonic = 1):
         if harmonic == 2:
