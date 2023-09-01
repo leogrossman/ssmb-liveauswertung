@@ -371,7 +371,9 @@ class SequenceAnalyzer:
                     # calculate peak height flucuation during the last averaginglength:
                     for p in range(-self.sidepeaks, self.sidepeaks+1):
                         try:
-                            md.update({f'harm{h}_turn{t}_peak{p}_std': peakdata_fluct[f'harm{h}_turn{t}_peak{p}'].std(ddof=1)})
+                            std = peakdata_fluct[f'harm{h}_turn{t}_peak{p}'].std(ddof=1)
+                            md.update({f'harm{h}_turn{t}_peak{p}_std': std})
+                            md.update({f'harm{h}_turn{t}_peak{p}_sem': std/np.sqrt(md[f'averaging_length_harm{h}'])}) # standard error of mean
                         except KeyError:
                             pass # this happens when the data column is not present, skip fluctuation calculation.
                     
