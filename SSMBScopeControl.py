@@ -1,0 +1,310 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon May 23 13:50:05 2022
+
+@author: Arnold Kruschinski
+"""
+
+import sys
+import numpy as np
+import pandas as pd
+
+import threading
+import queue
+from time import sleep
+from datetime import datetime
+
+def format_command(command, argument, form = "%g"):
+    return command + " " + form % argument
+    
+def larger_scale(scale):
+    exp = np.floor(np.log10(scale))
+    mant = scale/10**exp
+    if mant >= 5:
+        return   10**(exp+1)
+    if mant >= 2:
+        return 5*10**exp
+    else:
+        return 2*10**exp
+
+def smaller_scale(scale):
+    exp = np.floor(np.log10(scale))
+    mant = scale/10**exp
+    if mant > 5:
+        return 5*10**exp
+    if mant > 2:
+        return 2*10**exp
+    if mant > 1:
+        return   10**exp
+    else:
+        return 5*10**(exp-1)
+    
+class SSMBScopeControl:
+    
+    def __init__(self, scopeip, data_queue):
+        """
+        Opens a vxi11 connection to the scope at ``scopeip`` and readys the scope control loop in a new thread. Communication via three queues:
+         --control_queue: send commands for the scope here in the form ['command', (arguments, ...)] (queue item must be a *list*).
+         --status_queue: returns the acquisition status of the scope (format TBD)
+         --data_queue: here the acquired data is output, in the form (date, data).
+
+        Parameters
+        ----------
+        scopeip : string
+            IP address of the scope that should be connected with.
+
+        """
+        sys.path.append('python_vxi11-0.9-py3.6.egg')
+        from vxi11 import Instrument
+        self.scope = Instrument(scopeip)
+        self.channels = ["CH%d" % (i+1) for i in range(4)]
+        self.__trigger_armed = False
+        self.go = False
+        self.__thread = threading.Thread(target=self.__control_loop)
+        self.control_queue = queue.Queue()
+        self.status_queue = queue.Queue()
+        self.__data_queue = data_queue
+        
+    def start(self):
+        """
+        Start the scope control loop.
+        """
+        self.go = True
+        self.__thread.start()
+        
+    def stop(self):
+        """
+        Start the scope control loop.
+        """
+        self.go = False
+        
+    def __control_loop(self):
+        i=0
+        acqstate = ''
+        acqnumber = 0
+        savestatus = None
+        checkseqlen = False
+        while self.go:
+            while self.control_queue.qsize(): # iterate as long as there are items to get
+                arguments = self.control_queue.get_nowait()
+                command = arguments[0]
+                del arguments[0]
+                try:
+                    if command == 'quit':
+                        return # stop control loop on quit command
+                    elif command == 'reset':
+                        self.recall_setup(*arguments)
+                    elif command == 'start':
+                        self.start_acq()
+                    elif command == 'stop':
+                        self.stop_acq()
+                    elif command == 'sequence':
+                        self.start_acq_sequence(*arguments)
+                    elif command == 'seqlen':
+                        checkseqlen = True
+                    elif command == 'increase':
+                        self.increase_scale(*arguments)
+                    elif command == 'decrease':
+                        self.decrease_scale(*arguments)
+                    elif command == 'savestart':
+                        self.start_data_saving(*arguments)
+                    elif command == 'savestop':
+                        self.stop_data_saving()
+                except (TypeError, ValueError) as e:
+                    print(f'Error: ScopeControl: Invalid command "{command}", {arguments}. Error message:')
+                    print(type(e), e)
+            # once all commands are completed, start checking for new data
+            if self.check_for_new_acqusition():
+                date = datetime.now()
+                data = self.get_data()
+                self.__data_queue.put((date, data))
+                i = 0 # check for acqusition status immediately after the wait caused by acquiring data!
+            
+            if i <= 0: # checking aquisition status every 20 loops (200 ms) suffices
+                i = 20
+                acqstate_new = self.get_acq_status()
+                acqnumber_new = self.get_num_acq()
+                savestatus_new = self.get_data_saving_status()
+                if acqstate != acqstate_new or acqnumber != acqnumber_new or savestatus != savestatus_new or checkseqlen:
+                    if checkseqlen or acqstate_new == 'SEQUENCE': # also update sequence length when new sequence was started (could have been changed and started on the scope)
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, self.get_sequence_length()])
+                        checkseqlen = False
+                    else:
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new])
+                    acqstate = acqstate_new
+                    acqnumber = acqnumber_new
+                    savestatus = savestatus_new
+            else:
+                i -= 1
+            sleep(0.01)
+
+    
+    def recall_setup(self, path_to_setup_file='C:/Scope_Setup/SSMB_standard_20220519.set'):
+        """
+        recalls the scope setup from a file in scope memory at the given ``path_to_setup_file`` and waits until completion.
+        """
+        self.scope.write('RECALL:SETUP "%s"' % path_to_setup_file)
+        self.scope.ask('*OPC?') # wait until setup is finished
+    
+    def get_id(self):
+        """
+        returns the scope device identification code.
+        """
+        idn = self.scope.ask('*IDN?')
+        return idn
+        
+    def get_trigger_state(self):
+        """
+        returs the current trigger state as 'TRIGGER', 'READY', 'ARMED', 'AUTO' or 'SAVE'.
+        """
+        trigstate = self.scope.ask('TRIG:STATE?')
+        return trigstate
+        
+    def check_for_new_acqusition(self):
+        """
+        checks if there is a new acquisition available since the last check. returns True if this is the case, False otherwise.
+        Attention: This only works reliably if the method is called repeatedly on a time scale faster than the trigger frequency!
+        """
+        state = self.get_trigger_state()
+        if state == "READY" or state == "ARMED":
+            self.__trigger_armed = True
+            return False
+        if (state == "TRIGGER" or state == "SAVE") and self.__trigger_armed:
+            self.__trigger_armed = False
+            return True
+        return False
+    
+    def get_acq_status(self):
+        """
+        Returns the acquisition status of the scope, returning either 'RUN', 'STOP' or 'SEQUENCE'.
+        """
+        seq = self.scope.ask('ACQ:Stopafter?')
+        run = self.scope.ask('ACQ:STATE?')
+        if (run == 'RUN' or run == '1') and seq == 'SEQUENCE':
+            return seq
+        else:
+            if run == '1':
+                return 'RUN'
+            if run == '0':
+                return 'STOP'
+            return run
+    
+    def get_sequence_length(self):
+        """
+        Returns the currently set length of the sequence acquisition mode.
+        """
+        numseq = int(self.scope.ask('ACQ:SEQ:NUMSEQ?'))
+        return numseq
+    
+    def get_num_acq(self):
+        """
+        Returns the number of acquisitions since the last time a sequence was started or the setup of the scope was changed
+        """
+        numacq = int(self.scope.ask('ACQ:NUMACQ?'))
+        return numacq
+    
+    def start_acq(self):
+        """
+        Starts data acquisition on the scope in continuous mode.
+        """
+        self.scope.write('ACQ:Stopafter RunStop')
+        self.scope.write('ACQ:STATE RUN')
+    
+    def start_acq_sequence(self, numacq=None):
+        """
+        Starts data acquisition on the scope in sequence mode with maximum ``numacq`` acquisitions. When numacq is not given or None, the previously set value is retained. 
+        """
+        if numacq is not None:
+            self.scope.write(format_command('ACQ:SEQ:NUMSEQ', numacq))
+        self.scope.write('ACQ:Stopafter Sequence')
+        self.scope.write('ACQ:STATE RUN')
+        
+    def stop_acq(self):
+        """
+        Stops data acquisition on the scope.
+        """
+        self.scope.write('ACQ:STATE STOP')
+    
+    def get_clipping_status(self):
+        """
+        Returns the clipping status of all active channels (given by the channels list of the scope control object) as a boolean list.
+        """
+        clipping = [bool(int(self.scope.ask(ch+':Clipping?'))) for ch in self.channels]
+        return clipping
+    
+
+    def get_data(self):
+        """
+        Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: 'TIME', [channel names as given in channel list].
+        """
+        self.scope.write('DATA:ENC SRP') # unsigned int, LSB first
+        self.scope.write('DATa:SOURCE ' + ','.join(self.channels))
+        reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
+        self.scope.write('DATA:START 1')
+        self.scope.write('DATA:STOP %d' % reclen)
+        datawidth = int(self.scope.ask('DATA:WIDTH?'))
+        xoffset = int(self.scope.ask("WFMOutpre:PT_Off?"))
+        xscale = float(self.scope.ask("WFMOutpre:XINCR?"))
+        binary = self.scope.ask('CURVE?', encoding='latin1')
+        k = 0
+        channeldatalist = []
+        while k<len(binary):
+            if binary[k] == ';':
+                k += 1
+            elif binary[k] == '#':
+                k += 1
+                lx = int(binary[k])
+                ly = int(binary[k+1:k+1+lx])
+                k += 1+lx
+                singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
+                                                            # \ this needs least significant byte first!
+                k += ly
+                channeldatalist.append(singlechanneldataraw)
+        channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = self.channels)
+        vertscales  = np.array([self.scope.ask(ch+":SCALE?") for ch in self.channels]).astype(float)
+        vertposns   = np.array([self.scope.ask(ch+":POS?") for ch in self.channels]).astype(float)
+        scaleddf = (channeldf / 2**(datawidth*8) * 10 - 5 - vertposns) * vertscales
+        timeaxis = pd.Series((channeldf.index - xoffset) * xscale, name='TIME')
+        return pd.concat((timeaxis, scaleddf), axis='columns')
+    
+    def start_data_saving(self, path, filename, savebinary=True, saveimage=False):
+        self.scope.write(f'SAVEON:FILE:DEST "{path}"')
+        self.scope.write(f'SAVEON:FILE:NAME "{filename}"')
+        if saveimage:
+            self.scope.write('SAVEON:IMAGE:FILEF PNG')
+        self.scope.write('SAVEON:IMAGE %d' % saveimage)
+        self.scope.write('SAVEON:WAVE:FILEF ' + 'INTERN' if savebinary else 'SPREADSHEET')
+        self.scope.write('SAVEON:WAVE:SOURCE ALL')
+        self.scope.write('SAVEON:WAVE ON')
+        
+        self.scope.write('SAVEON:TRIG ON') # TODO this does not seem to work...
+    
+    def stop_data_saving(self):
+        self.scope.write('SAVEON:TRIG OFF')
+    
+    def get_data_saving_status(self):
+        savestate = bool(int(self.scope.ask('SAVEON:TRIG?')))
+        return savestate
+    
+    def get_data_saving_path(self):
+        savepath = self.scope.ask("SAVEON:FILE:DEST?").strip('"')
+        return savepath
+    
+    def get_data_saving_name(self):
+        savename = self.scope.ask("SAVEON:FILE:NAME?").strip('"')
+        return savename
+
+
+    def increase_scale(self, *channels):
+        """
+        increases the vertical scale for the given ``channels`` to the next higher scale.
+        """
+        for channel in channels:
+            self.scope.write(format_command(channel + ":SCALE", larger_scale(float(self.scope.ask(channel + ":SCALE?")))))
+        
+    def decrease_scale(self, *channels):
+        """
+        decreases the vertical scale for the given ``channels`` to the next lower scale.
+        """
+        for channel in channels:
+            self.scope.write(format_command(channel + ":SCALE", smaller_scale(float(self.scope.ask(channel + ":SCALE?")))))    
