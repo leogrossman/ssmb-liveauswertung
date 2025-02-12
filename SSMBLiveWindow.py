@@ -470,7 +470,7 @@ class SSMBWindow(tk.Frame):
         self.__logging_clearBtn = tk.Button(self.__frame_saving, text='Clear', width=8, command=self.__logging_clear)
         self.__logging_clearBtn.grid(row=8, column=6, sticky=tk.W)
         
-        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data (disabled)', width=20)#, command=self.__logging_save)
+        self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data', width=20, command=self.__logging_save)
         self.__logging_saveBtn.grid(row=9, column=3, columnspan=3, padx=3, sticky=tk.W)
 
         ### register window closing protocol ###

@@ -48,7 +48,7 @@ class SSMBPlotting:
             return self.__canvases_detail[harm-1][turn-1]
     
     def redraw(self, traceanalyzer, harm1turns=[1,2,3], harm1peaks=[0,0,0], harm2turns=[1,2,3], harm2peaks=[0,0,0], centerpeak_pos=None,
-               timecolumn = 'TIME', harm1column = 'CH3', harm2column = 'CH4', triggercolumn = 'CH2', maxturns = 2):#, plotlenOverview = 200, plotlenDetail=200):
+               timecolumn = 'TIME', harm1column = 'CH3', harm2column = 'CH4', triggercolumn = 'CH2', maxturns = 2, plotlenOverview = 5000):
         """
         Redraw all plots with new data.
 
@@ -112,9 +112,9 @@ class SSMBPlotting:
                 if centerpeak_pos is not None:
                     ax1.axvline(windowstart+centerpeak_pos, color='k')
                 
-                #datalength = len(traceanalyzer.trace)
-                #skipping = datalength//plotlenOverview
-                skipping=1
+                datalength = len(traceanalyzer.trace)
+                skipping = datalength//plotlenOverview
+                #skipping=2
                 try:
                     ax2.plot(traceanalyzer.trace[timecolumn].loc[::skipping]*1e9, traceanalyzer.trace[triggercolumn].loc[::skipping], 'grey')
                 except KeyError:
