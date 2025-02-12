@@ -54,7 +54,7 @@ class SSMBScopeControl:
         """
         Opens a vxi11 connection to the scope at ``scopeip`` and readys the scope control loop in a new thread. Communication via three queues:
          --control_queue: send commands for the scope here in the form ['command', (arguments, ...)] (queue item must be a *list*).
-         --status_queue: returns the acquisition status of the scope (format TBD)
+         --status_queue: returns the acquisition status of the scope as (acqstate, acqnumber, savestatus [, self.get_sequence_length])
          --data_queue: here the acquired data is output, in the form (date, data).
          --maxvalue_queue: here the maximum peak height is input for automatic scaling, in the form (harm1, harm2).
 
@@ -305,11 +305,12 @@ class SSMBScopeControl:
         """
         Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: 'TIME', [channel names as given in channel list].
         """
+        # TODO do we need to do the setup commands every time?
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
         self.scope.write('DATA:SOURCE ' + ','.join(self.channels))
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
         self.scope.write('DATA:START 1')
-        self.scope.write('DATA:STOP %d' % reclen)
+        self.scope.write('DATA:STOP %d' % reclen) # %TODO possibility for partial data transfer (only windows of interest)
         datawidth = int(self.scope.ask('DATA:WIDTH?')) # number of bytes for each data point
         xoffset = int(self.scope.ask("WFMOutpre:PT_Off?"))
         xscale = float(self.scope.ask("WFMOutpre:XINCR?"))

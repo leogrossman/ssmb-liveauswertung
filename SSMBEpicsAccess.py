@@ -33,7 +33,7 @@ class SSMBPVs:
             self.pvfrf = PV('MCLKHGP:rdFrq499')
             
             ### PV name fragments ###
-            IOC_NAME = 'SCOPE1ZULP' # TBD
+            IOC_NAME = 'SCOPE1ZULP'
             SEP1 = ':'
             H1P = ['h1p1', 'h1p2', 'h1p3']
             H2P = ['h2p1', 'h2p2', 'h2p3']
