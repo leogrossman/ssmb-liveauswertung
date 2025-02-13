@@ -980,7 +980,7 @@ class SSMBWindow(tk.Frame):
             self.plotting = True
             self.__doplottingBtn.configure(text = 'Plotting enabled', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
     
-    def get_dataranges(self):
+    def get_dataranges(self, askifnolaser=True):
         dataranges = []
         try:
             trev = 80/self._epics.PV.get_frf()
@@ -993,8 +993,9 @@ class SSMBWindow(tk.Frame):
         
         laserpos = self.__laser_position.get()
         if np.isnan(laserpos):
-            if not tk.messagebox.askyesno('Continue without laser pulse diagnostic?', 'The laser pulse position could not be determined yet, continue without a data window for the laser pulse?'):
-                return None
+            if askifnolaser:
+                if not tk.messagebox.askyesno('Continue without laser pulse diagnostic?', 'The laser pulse position could not be determined yet, continue without a data window for the laser pulse?'):
+                    return None
         else:
             laserstart = (laserpos - self.__config_winwidth.get()/2) *1e-9
             laserstop  = (laserpos + self.__config_winwidth.get()/2) *1e-9
@@ -1023,8 +1024,12 @@ class SSMBWindow(tk.Frame):
                 self.__datatransferrefreshBtn.configure(state='normal')
                 
     def __refresh_data_transfer(self):
-        pass
-            
+        if self.partial_transfer:
+            dataranges = self.get_dataranges(askifnolaser=False)
+            try:
+                self._ctrl.control_queue.put(['dataranges', dataranges])
+            except AttributeError:
+                print('Warning: Tried to activate partial data transfer, but the program backend has not started!')
             
     def __acq_load_setup(self):
         try:

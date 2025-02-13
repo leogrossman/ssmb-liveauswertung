@@ -102,15 +102,11 @@ class SSMBPlotting:
                 ax1 = plt.gca()
                 ax2 = plt.twinx()
                 
-                windowstart, windowend = traceanalyzer.get_window_times(turn1)
-                ax1.axvspan(windowstart, windowend, color='r', alpha=0.5)
-                if centerpeak_pos is not None:
-                    ax1.axvline(windowstart+centerpeak_pos, color='k')
-                    
-                windowstart, windowend = traceanalyzer.get_window_times(turn2)
-                ax1.axvspan(windowstart, windowend, color='r', alpha=0.5)
-                if centerpeak_pos is not None:
-                    ax1.axvline(windowstart+centerpeak_pos, color='k')
+                for tt in range(maxturns):
+                    windowstart, windowend = traceanalyzer.get_window_times(tt)
+                    ax1.axvspan(windowstart, windowend, color='r', alpha=0.5 if tt == turn1 or tt == turn2 else 0.2)
+                    if centerpeak_pos is not None:
+                        ax1.axvline(windowstart+centerpeak_pos, color='k')
                 
                 datalength = len(traceanalyzer.trace)
                 skipping = datalength//plotlenOverview
