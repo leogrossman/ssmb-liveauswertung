@@ -305,6 +305,25 @@ class SSMBScopeControl:
         """
         Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: 'TIME', [channel names as given in channel list].
         """
+        def decodebinary(binary, datawidth):
+            k = 0
+            channeldatalist = []
+            while k<len(binary):
+                if binary[k] == ';': # channels separated by ';', skip this char
+                    k += 1
+                elif binary[k] == '#': # channel data length coded after '#'
+                    k += 1
+                    lx = int(binary[k]) # number of data length characters in first character after '#' (this is ASCII!)
+                    k += 1
+                    ly = int(binary[k:k+lx]) # data length (this is ASCII!)
+                    k += lx
+                    # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
+                    singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
+                                                                # \ this needs least significant byte first!
+                    k += ly
+                    channeldatalist.append(singlechanneldataraw)
+            return channeldatalist
+        
         # TODO do we need to do the setup commands every time?
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
         self.scope.write('DATA:SOURCE ' + ','.join(self.channels))
@@ -315,22 +334,7 @@ class SSMBScopeControl:
         xoffset = int(self.scope.ask("WFMOutpre:PT_Off?"))
         xscale = float(self.scope.ask("WFMOutpre:XINCR?"))
         binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
-        k = 0
-        channeldatalist = []
-        while k<len(binary):
-            if binary[k] == ';': # channels separated by ';', skip this char
-                k += 1
-            elif binary[k] == '#': # channel data length coded after '#'
-                k += 1
-                lx = int(binary[k]) # number of data length characters in first character after '#' (this is ASCII!)
-                k += 1
-                ly = int(binary[k:k+lx]) # data length (this is ASCII!)
-                k += lx
-                # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
-                singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
-                                                            # \ this needs least significant byte first!
-                k += ly
-                channeldatalist.append(singlechanneldataraw)
+        channeldatalist = decodebinary(binary, datawidth)
         channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = self.channels)
         vertscales  = np.array([self.scope.ask(ch+":SCALE?") for ch in self.channels]).astype(float)
         vertposns   = np.array([self.scope.ask(ch+":POS?") for ch in self.channels]).astype(float)
