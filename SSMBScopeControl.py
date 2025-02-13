@@ -67,7 +67,8 @@ class SSMBScopeControl:
         sys.path.append('python_vxi11-0.9-py3.6.egg')
         from vxi11 import Instrument
         self.scope = Instrument(scopeip)
-        self.channels = ["CH%d" % (i+1) for i in range(4)]
+        self.channels = ["CH%d" % (i+1) for i in range(4)] # warning: self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
+        self.dataranges = None # start with no ranges specified to get full data trace
         self.__trigger_armed = False
         self.go = False
         self.__thread = threading.Thread(target=self.__control_loop)
@@ -117,6 +118,8 @@ class SSMBScopeControl:
                         self.start_acq_sequence(*arguments)
                     elif command == 'seqlen':
                         checkseqlen = True
+                    elif command == 'dataranges':
+                        self.set_dataranges(*arguments)
                     elif command == 'savestart':
                         self.start_data_saving(*arguments)
                     elif command == 'savestop':
@@ -299,7 +302,9 @@ class SSMBScopeControl:
         scale = float(self.scope.ask(channel+":SCALE?"))
         position = float(self.scope.ask(channel+":POS?"))
         return (5-position) * scale, (5-position) * smaller_scale(scale)
-        
+    
+    def set_dataranges(self, dataranges=None):
+        self.dataranges = dataranges
 
     def get_data(self):
         """
@@ -324,18 +329,52 @@ class SSMBScopeControl:
                     channeldatalist.append(singlechanneldataraw)
             return channeldatalist
         
+        def transferall(reclen, datawidth):
+            self.scope.write('DATA:START 1')
+            self.scope.write('DATA:STOP %d' % reclen)
+            binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
+            channeldatalist = decodebinary(binary, datawidth)
+            channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = self.channels)
+            return channeldf
+        
         # TODO do we need to do the setup commands every time?
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
         self.scope.write('DATA:SOURCE ' + ','.join(self.channels))
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
-        self.scope.write('DATA:START 1')
-        self.scope.write('DATA:STOP %d' % reclen) # %TODO possibility for partial data transfer (only windows of interest)
         datawidth = int(self.scope.ask('DATA:WIDTH?')) # number of bytes for each data point
-        xoffset = int(self.scope.ask("WFMOutpre:PT_Off?"))
+        
+        self.scope.write('DATA:START 1')
+        self.scope.write('DATA:STOP %d' % reclen)
+        xoffset = int(self.scope.ask("WFMOutpre:PT_Off?")) # caution: this is relative to DATA:START -> which should thus be set to 1 before this query is sent
         xscale = float(self.scope.ask("WFMOutpre:XINCR?"))
-        binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
-        channeldatalist = decodebinary(binary, datawidth)
-        channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = self.channels)
+        
+        if self.dataranges is None: # no ranges specified, transfer full trace
+            channeldf = transferall(reclen, datawidth)
+        
+        else: # transfer partial data as given in self.dataranges
+            try:
+                channeldf = pd.DataFrame(np.zeros((reclen,len(self.channels))), columns=self.channels) # setup DataFrame initialized with zeros
+                for datarange in self.dataranges: # iteration over individual ranges
+                    # dataranges are specified in TIME, convert to sample indices
+                    # add 1 because DATA:START/STOP range from 1 to reclen
+                    datastart = datarange[0] // xscale + xoffset + 1
+                    datastop  = datarange[1] // xscale + xoffset + 1
+                    assert datastart >= 1
+                    assert datastop <= reclen
+                    
+                    # get data:
+                    self.scope.write('DATA:START %d' % datastart)
+                    self.scope.write('DATA:STOP %d' % datastop)
+                    binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
+                    channeldatalist = decodebinary(binary, datawidth)
+                    
+                    # insert into DataFrame:
+                    channeldf.loc[datastart:datastop] = np.array(channeldatalist).transpose() # use .loc because datastart and datastop are inclusive
+                    
+            except AssertionError:
+                print('Error: Limits for partial scope data transfer are out of bounds! Defaulting to transfering full trace')
+                channeldf = transferall(reclen, datawidth)
+        
         vertscales  = np.array([self.scope.ask(ch+":SCALE?") for ch in self.channels]).astype(float)
         vertposns   = np.array([self.scope.ask(ch+":POS?") for ch in self.channels]).astype(float)
         scaleddf = (channeldf / 2**(datawidth*8) * 10 - 5 - vertposns) * vertscales
