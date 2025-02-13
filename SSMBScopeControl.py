@@ -304,6 +304,9 @@ class SSMBScopeControl:
         return (5-position) * scale, (5-position) * smaller_scale(scale)
     
     def set_dataranges(self, dataranges=None):
+        """
+        set the dataranges to be read for partial data transfer (in seconds relative to trigger). Format: [[range1start, range1stop], [range2start,range2stop], ...]
+        """
         self.dataranges = dataranges
 
     def get_data(self):
@@ -361,6 +364,7 @@ class SSMBScopeControl:
                     datastop  = datarange[1] // xscale + xoffset + 1
                     assert datastart >= 1
                     assert datastop <= reclen
+                    # TODO we can have some data ranges that are outside the bounds and should just be ignored gracefully!
                     
                     # get data:
                     self.scope.write('DATA:START %d' % datastart)

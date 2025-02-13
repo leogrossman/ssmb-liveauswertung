@@ -61,6 +61,7 @@ class SSMBWindow(tk.Frame):
             print('Starting SSMB Live Evaluation!')            
             
         self.plotting = plotting
+        self.partial_transfer = False
         
         tk.Frame.__init__(self, master)
         self.__loop_index = 0
@@ -79,9 +80,11 @@ class SSMBWindow(tk.Frame):
         self.__color_harm1 = 'LightPink1'
         self.__color_harm2 = 'PaleGreen2'
         self.__color_config = 'grey70'
+        self.__color_laser = 'mediumpurple2'
         self.__color_saving = 'navajo white'
         self.__color_btngreen = 'green3'
         self.__color_btnred = 'firebrick2'
+        self.__color_btnyellow = 'Gold'
         
         ### configure window ###
         self.master = master
@@ -100,21 +103,54 @@ class SSMBWindow(tk.Frame):
         self.__frame_harm1.grid(row=1, column=0, padx=10, pady=10)
         self.__frame_harm2.grid(row=1, column=1, padx=10, pady=10, columnspan=4)
         
+        self.__frame_misc   = tk.Frame(self.master, width = 600, height= 50, bg=self.__color_background)
+        self.__frame_general= tk.Frame(self.__frame_misc, width = 400, height= 50, bg=self.__color_config)
+        self.__frame_laser  = tk.Frame(self.__frame_misc, width = 200, height= 50, bg=self.__color_laser)
         self.__frame_config = tk.Frame(self.master, width = 600, height=200, bg=self.__color_config)
         self.__frame_saving = tk.Frame(self.master, width = 600, height=200, bg=self.__color_saving)
+        self.__frame_misc.grid(row=2,column=0)
+        self.__frame_general.grid(row=0,column=0,padx=10, pady=10)
+        self.__frame_laser.grid(row=0,column=1,padx=10, pady=10)
         self.__frame_config.grid(row=3, column=0, padx=10, pady=10, rowspan=3)
-        self.__frame_saving.grid(row=2, column=1, rowspan=2, padx=10, pady=10)
+        self.__frame_saving.grid(row=2, column=1, padx=10, pady=10, rowspan=2)
         
         tk.Label(self.__frame_harm1, text='First Harmonic',  relief=tk.RAISED, bd=1, bg=self.__color_harm1, padx=10).grid(row=0, column=0, sticky=tk.W, pady=2)
         tk.Label(self.__frame_harm2, text='Second Harmonic', relief=tk.RAISED, bd=1, bg=self.__color_harm2, padx=10).grid(row=0, column=0, sticky=tk.W, pady=2)
         
-        ### Temporary Plotting on/off button ###
-        self.__doplottingBtn = tk.Button(self.master, text='Plotting enabled', width=15, command=self.__toggle_plotting)
+        ### General settings frame ###
+        tk.Label(self.__frame_general, text='General settings', bg=self.__color_config, relief=tk.RAISED).grid(row=0, column=0, sticky=tk.NW)
+        
+        ### Plotting on/off button ###
+        self.__doplottingBtn = tk.Button(self.__frame_general, text='Plotting enabled', width=15, command=self.__toggle_plotting)
         if self.plotting:
             self.__doplottingBtn.configure(text = 'Plotting enabled', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
         else:
             self.__doplottingBtn.configure(text = 'Plotting disabled', bg=self.__color_btnred, activebackground=self.__color_btnred)
-        self.__doplottingBtn.grid(row=2, column=0)
+        self.__doplottingBtn.grid(row=1, column=0, padx = 10, pady=10)
+        
+        ### Full/Partial data transfer buttons ###
+        self.__datatransferBtn = tk.Button(self.__frame_general, text='Full data transfer', width=15, command=self.__toggle_data_transfer)
+        self.__datatransferBtn.grid(row=0, column=2, padx = 25, pady=10, sticky=tk.W)
+        self.__datatransferrefreshBtn = tk.Button(self.__frame_general, text='Refresh data windows', width=15, command=self.__refresh_data_transfer, state='disabled')
+        self.__datatransferrefreshBtn.grid(row=1, column=2, padx = 25, pady=10, sticky=tk.W)
+        
+        ### Laser data frame ###
+        tk.Label(self.__frame_laser, text='Laser', bg=self.__color_laser, relief=tk.RAISED).grid(row=0, column=0, sticky=tk.NW)
+        
+        tk.Label(self.__frame_laser, text='position (ns)', bg=self.__color_laser).grid(row=0, column=1, sticky=tk.E)
+        tk.Label(self.__frame_laser, text='peak height', bg=self.__color_laser).grid(row=1, column=1, sticky=tk.E)
+        tk.Label(self.__frame_laser, text='avg. peak height', bg=self.__color_laser).grid(row=2, column=1, sticky=tk.E)
+        
+        self.__laser_position = tk.DoubleVar(self.master, value=np.nan)
+        self.__laser_peakheight = tk.DoubleVar(self.master, value=np.nan)
+        self.__laser_avgheight = tk.DoubleVar(self.master, value=np.nan)
+                
+        self.__laser_positionEtr = tk.Entry(self.__frame_laser, textvariable = self.__laser_position, state='readonly', width=11)
+        self.__laser_positionEtr.grid(row=0, column=2, columnspan=2, padx = 6, pady = 6)
+        self.__laser_peakheightEtr = tk.Entry(self.__frame_laser, textvariable = self.__laser_peakheight, state='readonly', width=11)
+        self.__laser_peakheightEtr.grid(row=1, column=2, columnspan=2, padx = 6, pady = 6)
+        self.__laser_avgheightEtr = tk.Entry(self.__frame_laser, textvariable = self.__laser_avgheight, state='readonly', width=11)
+        self.__laser_avgheightEtr.grid(row=2, column=2, columnspan=2, padx = 6, pady = 6)
         
         print('Initialize plotting...')
         ### Initialize plotting module and create graphs ###
@@ -398,7 +434,7 @@ class SSMBWindow(tk.Frame):
         ### Oscilloscope control panel ###
         tk.Label(self.__frame_saving, text='Oscilloscope control', bg=self.__color_saving, relief=tk.RAISED).grid(row=1, column=0, sticky=tk.W)
         
-        self.__acq_runBtn = tk.Button(self.__frame_saving, text='Acquisition unknown', width=15, command=self.__acq_run)
+        self.__acq_runBtn = tk.Button(self.__frame_saving, text='Acquisition unknown', width=15, command=self.__acq_run, bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
         self.__acq_runBtn.grid(row=1, column=1, pady=3)
         self.__acq_sequenceBtn = tk.Button(self.__frame_saving, text='Sequence', width=8, command=self.__acq_sequence)
         self.__acq_sequenceBtn.grid(row=1, column=2)
@@ -815,7 +851,7 @@ class SSMBWindow(tk.Frame):
             self.__acq_runBtn.configure(text='Acquisition stopped', bg=self.__color_btnred, activebackground=self.__color_btnred)
             self.__acq_sequenceBtn.configure(bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         else:
-            self.__acq_runBtn.configure(text='Acquisition unknown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self.__acq_runBtn.configure(text='Acquisition unknown', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
             self.__acq_sequenceBtn.configure(bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         
         self.__savestatus = savestatus
@@ -907,7 +943,19 @@ class SSMBWindow(tk.Frame):
             self.__harm2t3_fluctuation.set(format_volts(peakdata[f'harm2_turn{self.__harm2t3_turn.get()-1}_peak{self.__harm2t3_peak.get()}_std']))
         except KeyError:
             self.__harm2t3_fluctuation.set('no data')
-        
+            
+        try:
+            self.__laser_position.set(peakdata['laser_position'])
+        except KeyError:
+            self.__laser_position.set(np.nan)
+        try:
+            self.__laser_peakheight.set(peakdata['laser_maximum'])
+        except KeyError:
+            self.__laser_peakheight.set(np.nan)
+        try:
+            self.__laser_avgheight.set(peakdata['laser_maximum_avg'])
+        except KeyError:
+            self.__laser_avgheight.set(np.nan)        
         
         if self.__config_centerposmode != 'manual':
             if centerpeakpos is None:
@@ -931,8 +979,53 @@ class SSMBWindow(tk.Frame):
         else:
             self.plotting = True
             self.__doplottingBtn.configure(text = 'Plotting enabled', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
-
-
+    
+    def get_dataranges(self):
+        dataranges = []
+        try:
+            trev = 80/self._epics.PV.get_frf()
+        except TypeError: # raised if frf == None
+            trev = 160e-9 # use standard revolution time
+        for t in range(self.__config_maxrev.get()):
+            datastart = (self.__config_wincent.get() - self.__config_winwidth.get()/2) *1e-9 + t*trev
+            datastop  = (self.__config_wincent.get() + self.__config_winwidth.get()/2) *1e-9 + t*trev
+            dataranges.append([datastart, datastop])
+        
+        laserpos = self.__laser_position.get()
+        if np.isnan(laserpos):
+            if not tk.messagebox.askyesno('Continue without laser pulse diagnostic?', 'The laser pulse position could not be determined yet, continue without a data window for the laser pulse?'):
+                return None
+        else:
+            laserstart = (laserpos - self.__config_winwidth.get()/2) *1e-9
+            laserstop  = (laserpos + self.__config_winwidth.get()/2) *1e-9
+            dataranges.append([laserstart,laserstop])
+        
+        return dataranges
+    
+    def __toggle_data_transfer(self):
+        if self.partial_transfer:
+            try:
+                self._ctrl.control_queue.put(['dataranges']) # go to full data transfer by not specifying ranges
+            except AttributeError:
+                print('Warning: Tried to deactivate partial data transfer, but the program backend has not started!')
+            self.partial_transfer = False
+            self.__datatransferBtn.configure(text = 'Full data transfer', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self.__datatransferrefreshBtn.configure(state='disabled')
+        else:
+            dataranges = self.get_dataranges()
+            if dataranges is not None:
+                try:
+                    self._ctrl.control_queue.put(['dataranges', dataranges])
+                except AttributeError:
+                    print('Warning: Tried to activate partial data transfer, but the program backend has not started!')
+                self.partial_transfer = True
+                self.__datatransferBtn.configure(text = 'Partial data transfer', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+                self.__datatransferrefreshBtn.configure(state='normal')
+                
+    def __refresh_data_transfer(self):
+        pass
+            
+            
     def __acq_load_setup(self):
         try:
             self._ctrl.control_queue.put(['reset', self.__acq_setup_name.get()])
