@@ -987,8 +987,9 @@ class SSMBWindow(tk.Frame):
         except TypeError: # raised if frf == None
             trev = 160e-9 # use standard revolution time
         for t in range(self.__config_maxrev.get()):
-            datastart = (self.__config_wincent.get() - self.__config_winwidth.get()/2) *1e-9 + t*trev
-            datastop  = (self.__config_wincent.get() + self.__config_winwidth.get()/2) *1e-9 + t*trev
+			# calculate datastart/stop from current evaluation window. Add 1 ns to each side to avoid filter artifacts at data boundaries
+            datastart = (self.__config_wincent.get() - self.__config_winwidth.get()/2 - 1) *1e-9 + t*trev
+            datastop  = (self.__config_wincent.get() + self.__config_winwidth.get()/2 + 1) *1e-9 + t*trev
             dataranges.append([datastart, datastop])
         
         laserpos = self.__laser_position.get()
