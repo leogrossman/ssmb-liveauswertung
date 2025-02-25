@@ -127,10 +127,11 @@ class SSMBScopeControl:
         acqstate = ''
         acqnumber = 0
         savestatus = None
+        displaystatus = None
         checkseqlen = False
         scalelen = 20
         scaleauto = [False, False]
-        scalechannel = ['CH3', 'CH4']
+        scalechannel = ['CH3', 'CH4'] # TODO this is hard-coded!?
         scalemaxcache = ([],[])
         while self.go:
             while self.control_queue.qsize(): # iterate as long as there are items to get in the control queue
@@ -230,20 +231,23 @@ class SSMBScopeControl:
                         print(type(e), e)
                 i = 0 # check for acqusition status immediately after the wait caused by acquiring data!
             
+            # then check acquisition status, saving status, and display status
             if i <= 0: # checking aquisition status every 20 loops (200 ms) suffices
                 i = 20
                 acqstate_new = self.get_acq_status()
                 acqnumber_new = self.get_num_acq()
                 savestatus_new = self.get_data_saving_status()
-                if acqstate != acqstate_new or acqnumber != acqnumber_new or savestatus != savestatus_new or checkseqlen:
+                displaystatus_new = self.get_display_status()
+                if acqstate != acqstate_new or acqnumber != acqnumber_new or savestatus != savestatus_new or displaystatus != displaystatus_new or checkseqlen:
                     if checkseqlen or acqstate_new == 'SEQUENCE': # also update sequence length when new sequence was started (could have been changed and started on the scope)
-                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, self.get_sequence_length()])
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, self.get_sequence_length()])
                         checkseqlen = False
                     else:
-                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new])
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new])
                     acqstate = acqstate_new
                     acqnumber = acqnumber_new
                     savestatus = savestatus_new
+                    displaystatus = displaystatus_new
             else:
                 i -= 1
             sleep(0.01)
@@ -460,6 +464,9 @@ class SSMBScopeControl:
     def get_data_saving_name(self):
         savename = self.scope.ask("SAVEON:FILE:NAME?").strip('"')
         return savename
+    
+    def get_display_status(self):
+        return {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in channels}
 
     def enable_display(self, *channels):
         """

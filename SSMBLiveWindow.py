@@ -175,19 +175,37 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_harm1, text='Scope: Vertical Scale', bg=self.__color_harm1).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
         self.__harm1autoscaleBtn = tk.Button(self.__frame_harm1, text='Manual', width=8, command=self.__scale_harm1_auto)
         self.__harm1autoscaleBtn.grid(row=0, column=3, rowspan=2)
-        self.__harm1scaleupBtn = tk.Button(self.__frame_harm1, text='larger', width=5, command=self.__scale_harm1_inc)
+        self.__harm1scaleupBtn = tk.Button(self.__frame_harm1, text='zoom out', width=5, command=self.__scale_harm1_inc)
         self.__harm1scaleupBtn.grid(row=0, column=4, rowspan=2)
-        self.__harm1scaledownBtn = tk.Button(self.__frame_harm1, text='smaller', width=5, command=self.__scale_harm1_dec)
+        self.__harm1scaledownBtn = tk.Button(self.__frame_harm1, text='zoom in', width=5, command=self.__scale_harm1_dec)
         self.__harm1scaledownBtn.grid(row=0, column=5, rowspan=2)
+        
+        self.__harm1shiftupBtn = tk.Button(self.__frame_harm1, text='⬆', width=3, command=self.__shift_harm1_up)
+        self.__harm1shiftupBtn.grid(row=0, column=6, rowspan=2)
+        self.__harm1shiftdownBtn = tk.Button(self.__frame_harm1, text='⬇', width=3, command=self.__shift_harm1_down)
+        self.__harm1shiftdownBtn.grid(row=0, column=7, rowspan=2)
+        
+        self.__harm1shown = True
+        self.__harm1showBtn = tk.Button(self.__frame_harm1, text='Trace shown', width=8, command=self.__harm1_show_hide)
+        self.__harm1showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)
         
         self.__harm2autoscale = False
         tk.Label(self.__frame_harm2, text='Scope: Vertical Scale', bg=self.__color_harm2).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
         self.__harm2autoscaleBtn = tk.Button(self.__frame_harm2, text='Manual', width=8, command=self.__scale_harm2_auto)
         self.__harm2autoscaleBtn.grid(row=0, column=3, rowspan=2)
-        self.__harm2scaleupBtn = tk.Button(self.__frame_harm2, text='larger', width=5, command=self.__scale_harm2_inc)
+        self.__harm2scaleupBtn = tk.Button(self.__frame_harm2, text='zoom out', width=5, command=self.__scale_harm2_inc)
         self.__harm2scaleupBtn.grid(row=0, column=4, rowspan=2)
-        self.__harm2scaledownBtn = tk.Button(self.__frame_harm2, text='smaller', width=5, command=self.__scale_harm2_dec)
-        self.__harm2scaledownBtn.grid(row=0, column=5, rowspan=2)
+        self.__harm2scaledownBtn = tk.Button(self.__frame_harm2, text='zoom in', width=5, command=self.__scale_harm2_dec)
+        self.__harm2scaledownBtn.grid(row=0, column=5, rowspan=2)        
+        
+        self.__harm2shiftupBtn = tk.Button(self.__frame_harm2, text='⬆', width=3, command=self.__shift_harm2_up)
+        self.__harm2shiftupBtn.grid(row=0, column=6, rowspan=2)
+        self.__harm2shiftdownBtn = tk.Button(self.__frame_harm2, text='⬇', width=3, command=self.__shift_harm2_down)
+        self.__harm2shiftdownBtn.grid(row=0, column=7, rowspan=2)
+        
+        self.__harm2shown = True
+        self.__harm2showBtn = tk.Button(self.__frame_harm2, text='Trace shown', width=8, command=self.__harm2_show_hide)
+        self.__harm2showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)        
         
         ### Turn and peak selection boxes for first harmonic ###
         tk.Label(self.__frame_harm1, text='peak marker #1', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=3, column=1, columnspan=2)
@@ -444,18 +462,29 @@ class SSMBWindow(tk.Frame):
         self.__acq_sequencelenEtr.grid(row=1, column=4, sticky=tk.W)
         self.__acq_sequencenum = tk.IntVar(self.master, value=10)
         self.__acq_sequencenumEtr = tk.Entry(self.__frame_saving, width=8, textvariable = self.__acq_sequencenum, justify='right', validate = 'all', validatecommand = self.__int_validate_callback, state='readonly')
-        self.__acq_sequencenumEtr.grid(row=1, column=6, sticky=tk.W)
+        self.__acq_sequencenumEtr.grid(row=1, column=7, sticky=tk.W)
         
         tk.Label(self.__frame_saving, text='length', bg=self.__color_saving).grid(row=1, column=3, sticky=tk.E)
-        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=1, column=5, sticky=tk.E)
+        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=1, column=5, columnspan=2, sticky=tk.E)
+        
+        tk.Label(self.__frame_saving, text='Horizontal scale', bg=self.__color_saving).grid(row=2, column=1, sticky=tk.E)
+        self.__horscaleupBtn = tk.Button(self.__frame_saving, text='zoom out', width=5, command=self.__scale_hor_inc)
+        self.__horscaleupBtn.grid(row=2, column=2)
+        self.__horscaledownBtn = tk.Button(self.__frame_saving, text='zoom in', width=5, command=self.__scale_hor_dec)
+        self.__horscaledownBtn.grid(row=2, column=3, columnspan=2)
+        
+        self.__horshiftleftBtn = tk.Button(self.__frame_saving, text='⬅', width=5, command=self.__shift_hor_left)
+        self.__horshiftleftBtn.grid(row=2, column=5)
+        self.__horshiftrightBtn = tk.Button(self.__frame_saving, text='➞', width=5, command=self.__shift_hor_right)
+        self.__horshiftrightBtn.grid(row=2, column=6)
         
         self.__acq_setup_name = tk.StringVar(self.master)
         self.__acq_setupEtr = tk.Entry(self.__frame_saving, width=34, textvariable=self.__acq_setup_name)
-        self.__acq_setupEtr.grid(row=2, column=2, columnspan=4, padx=3)
-        tk.Label(self.__frame_saving, text='setup file path on scope', bg=self.__color_saving).grid(row=3, column=2, columnspan=4, sticky=tk.W)
+        self.__acq_setupEtr.grid(row=3, column=2, columnspan=5, padx=3)
+        tk.Label(self.__frame_saving, text='setup file path on scope', bg=self.__color_saving).grid(row=3, column=2, columnspan=5, sticky=tk.W)
         
         self.__acq_load_setupBtn = tk.Button(self.__frame_saving, text='Load setup', width=8, command=self.__acq_load_setup)
-        self.__acq_load_setupBtn.grid(row=2, column=6, padx=3)
+        self.__acq_load_setupBtn.grid(row=3, column=7, padx=3)
         
         
         ### Data saving panel ###
@@ -463,51 +492,51 @@ class SSMBWindow(tk.Frame):
         
         self.__rawdata_path = tk.StringVar(self.master)
         self.__rawdata_pathEtr = tk.Entry(self.__frame_saving, width=35, textvariable=self.__rawdata_path)
-        self.__rawdata_pathEtr.grid(row=5,column=0, columnspan=2, padx=3)
+        self.__rawdata_pathEtr.grid(row=6,column=0, columnspan=2, padx=3)
         self.__rawdata_browseBtn = tk.Button(self.__frame_saving, text='Browse...', command=self.__rawdata_browse)
-        self.__rawdata_browseBtn.grid(row=5, column=2, padx=3)
+        self.__rawdata_browseBtn.grid(row=6, column=2, padx=3)
         self.__rawdata_name = tk.StringVar(self.master)
         self.__rawdata_nameEtr = tk.Entry(self.__frame_saving, width=22, textvariable=self.__rawdata_name)
-        self.__rawdata_nameEtr.grid(row=5, column=3, columnspan=3, padx=3)
+        self.__rawdata_nameEtr.grid(row=6, column=3, columnspan=4, padx=3)
         
         #TODO how can we get the info on number of saved files??
         # self.__rawdata_numsaved = tk.IntVar(self.master, value=0)
         # self.__rawdata_numsavedEtr = tk.Entry(self.__frame_saving, width=8, justify='right', textvariable=self.__rawdata_numsaved, state='readonly')
-        # self.__rawdata_numsavedEtr.grid(row=5, column=5, padx=3)
+        # self.__rawdata_numsavedEtr.grid(row=6, column=5, padx=3)
 
-        tk.Label(self.__frame_saving, text='Save raw data', bg=self.__color_saving, relief=tk.RAISED).grid(row=4, column=0, sticky=tk.W)        
-        tk.Label(self.__frame_saving, text='saved traces', bg=self.__color_saving).grid(row=6, column=6, padx=3, sticky=tk.W)
-        tk.Label(self.__frame_saving, text='path to folder', bg=self.__color_saving).grid(row=6, column=0, sticky=tk.W)
-        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=6, column=3, columnspan=3, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='Save raw data', bg=self.__color_saving, relief=tk.RAISED).grid(row=5, column=0, sticky=tk.W)        
+        #tk.Label(self.__frame_saving, text='saved traces', bg=self.__color_saving).grid(row=7, column=6, padx=3, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='path to folder', bg=self.__color_saving).grid(row=7, column=0, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=7, column=3, columnspan=4, sticky=tk.W)
         
         self.__rawdata_saveBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__rawdata_save)
-        self.__rawdata_saveBtn.grid(row=5, column=6, padx=3)
+        self.__rawdata_saveBtn.grid(row=6, column=7, padx=3)
         
         tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=7, column=0)
         
         self.__logging_path = tk.StringVar(self.master)
         self.__logging_pathEtr = tk.Entry(self.__frame_saving, width=35, textvariable=self.__logging_path)
-        self.__logging_pathEtr.grid(row=9, column=0, columnspan=2, padx=3)
+        self.__logging_pathEtr.grid(row=10, column=0, columnspan=2, padx=3)
         self.__logging_browseBtn = tk.Button(self.__frame_saving, text='Browse...', command=self.__logging_browse)
-        self.__logging_browseBtn.grid(row=9, column=2, padx=3)
+        self.__logging_browseBtn.grid(row=10, column=2, padx=3)
         
         self.__logging_numsaved = tk.IntVar(self.master, value=0)
         self.__logging_numsavedEtr = tk.Entry(self.__frame_saving, width=8, justify='right', textvariable=self.__logging_numsaved, state='readonly')
-        self.__logging_numsavedEtr.grid(row=8, column=2, padx=3)
+        self.__logging_numsavedEtr.grid(row=9, column=2, padx=3)
 
-        tk.Label(self.__frame_saving, text='Log evaluation results', bg=self.__color_saving, relief=tk.RAISED).grid(row=8, column=0, sticky=tk.W)        
-        tk.Label(self.__frame_saving, text='logged results', bg=self.__color_saving).grid(row=8, column=3, columnspan=2, padx=3, sticky=tk.W)
-        tk.Label(self.__frame_saving, text='path to file', bg=self.__color_saving).grid(row=10, column=0, sticky=tk.W)
-        #tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=10, column=2, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='Log evaluation results', bg=self.__color_saving, relief=tk.RAISED).grid(row=9, column=0, sticky=tk.W)        
+        tk.Label(self.__frame_saving, text='logged results', bg=self.__color_saving).grid(row=9, column=3, columnspan=2, padx=3, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='path to file', bg=self.__color_saving).grid(row=11, column=0, sticky=tk.W)
+        #tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=11, column=2, sticky=tk.W)
         
         self.__logging_status = False
         self.__logging_startstopBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__logging_startstop)
-        self.__logging_startstopBtn.grid(row=8, column=1, padx=3)
+        self.__logging_startstopBtn.grid(row=9, column=1, padx=3)
         self.__logging_clearBtn = tk.Button(self.__frame_saving, text='Clear', width=8, command=self.__logging_clear)
-        self.__logging_clearBtn.grid(row=8, column=6, sticky=tk.W)
+        self.__logging_clearBtn.grid(row=9, column=6, sticky=tk.W)
         
         self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data', width=20, command=self.__logging_save)
-        self.__logging_saveBtn.grid(row=9, column=3, columnspan=3, padx=3, sticky=tk.W)
+        self.__logging_saveBtn.grid(row=10, column=3, columnspan=3, padx=3, sticky=tk.W)
 
         ### register window closing protocol ###
         self.master.protocol("WM_DELETE_WINDOW", self.close)
@@ -799,6 +828,19 @@ class SSMBWindow(tk.Frame):
             self.__harm1autoscale = False
             self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         self._ctrl.control_queue.put(['decrease', self.__column_harm1])
+        
+    def __shift_harm1_up(self):
+        self._ctrl.control_queue.put(['shiftup', self.__column_harm1])
+        
+    def __shift_harm1_down(self):
+        self._ctrl.control_queue.put(['shiftdown', self.__column_harm1])
+    
+    def __harm1_show_hide(self):
+        if self.__harm1shown:
+            self._ctrl.control_queue.put(['displayoff', self.__column_harm1])
+        else:
+            self._ctrl.control_queue.put(['displayon', self.__column_harm1])
+            
     
     def __scale_harm2_auto(self):
         if self.__harm2autoscale:
@@ -824,6 +866,31 @@ class SSMBWindow(tk.Frame):
             self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         self._ctrl.control_queue.put(['decrease', self.__column_harm2])
         
+    def __shift_harm2_up(self):
+        self._ctrl.control_queue.put(['shiftup', self.__column_harm2])
+        
+    def __shift_harm2_down(self):
+        self._ctrl.control_queue.put(['shiftdown', self.__column_harm2])
+    
+    def __harm2_show_hide(self):
+        if self.__harm2shown:
+            self._ctrl.control_queue.put(['displayoff', self.__column_harm2])
+        else:
+            self._ctrl.control_queue.put(['displayon', self.__column_harm2])
+        
+    def __scale_hor_inc(self):
+        self._ctrl.control_queue.put(['zoomout'])
+    
+    def __scale_hor_dec(self):
+        self._ctrl.control_queue.put(['zoomin'])
+        
+    def __shift_hor_left(self):
+        self._ctrl.control_queue.put(['shiftleft'])
+        
+    def __shift_hor_right(self):
+        self._ctrl.control_queue.put(['shiftright'])
+    
+    
     def main_loop(self):
         while self._ctrl.status_queue.qsize(): # iterate as long as there are status items to get
             self.refresh_acquisition(*self._ctrl.status_queue.get_nowait()) # refresh acquisition display with new status infos
@@ -838,7 +905,7 @@ class SSMBWindow(tk.Frame):
             self.master.after(10, self.main_loop) # restart the loop (we cannot wait for new data within a Queue.get() as this would block the GUI thread)
     
 
-    def refresh_acquisition(self, acqstate, acqnumber, savestatus, seqlen = None):
+    def refresh_acquisition(self, acqstate, acqnumber, savestatus, displaystatus, seqlen = None):
         self.__acq_sequencenum.set(acqnumber)
         self.__acqstate = acqstate
         if acqstate == 'RUN':
@@ -859,6 +926,19 @@ class SSMBWindow(tk.Frame):
             self.__rawdata_saveBtn.configure(text='Stop', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
         else:
             self.__rawdata_saveBtn.configure(text='Start', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        
+        self.__harm1shown = displaystatus[self.__column_harm1]
+        if self.__harm1shown:
+            self.__harm1showBtn.configure(text='Trace shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        else:
+            self.__harm1showBtn.configure(text='Trace hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        
+        self.__harm2shown = displaystatus[self.__column_harm2]
+        if self.__harm2shown:
+            self.__harm2showBtn.configure(text='Trace shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        else:
+            self.__harm2showBtn.configure(text='Trace hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+            
         
         if seqlen is not None:
             self.__acq_sequencelen.set(seqlen)
