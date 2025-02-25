@@ -19,6 +19,9 @@ def format_command(command, argument, form = "%g"):
     
 SMALLEST_SCALE = 1e-3 # 1 mV/div
 LARGEST_SCALE  = 1    # 1 V/div
+
+SMALLEST_HORIZONTAL_SCALE = 1e-9 # 1 ns/div
+LARGEST_HORIZONTAL_SCALE  = 1e-3 # 1 ms/div
     
 def larger_scale(scale):
     """
@@ -48,6 +51,35 @@ def smaller_scale(scale):
     else:
         return 5*10**(exp-1)
     
+def larger_horizontal_scale(scale):
+    """
+    takes a scale (in s/div) and outputs the next larger (more coarse) scale on the 1,2,4,10... sequence.
+    """
+    exp = np.floor(np.log10(scale))
+    mant = scale/10**exp
+    if mant >= 4:
+        return   10**(exp+1)
+    if mant >= 2:
+        return 4*10**exp
+    else:
+        return 2*10**exp
+
+def smaller_horizontal_scale(scale):
+    """
+    takes a scale (in s/div) and outputs the next smaller (more fine) scale on the 1,2,4,10... sequence.
+    """
+    exp = np.floor(np.log10(scale))
+    mant = scale/10**exp
+    if mant > 4:
+        return 4*10**exp
+    if mant > 2:
+        return 2*10**exp
+    if mant > 1:
+        return   10**exp
+    else:
+        return 4*10**(exp-1)
+
+
 class SSMBScopeControl:
     
     def __init__(self, scopeip, data_queue, maxvalue_queue):
@@ -124,10 +156,26 @@ class SSMBScopeControl:
                         self.start_data_saving(*arguments)
                     elif command == 'savestop':
                         self.stop_data_saving()
+                    elif command == 'displayon':
+                        self.enable_display(*arguments)
+                    elif command == 'displayoff':
+                        self.disable_display(*arguments)
                     elif command == 'increase':
                         self.increase_scale(*arguments)
                     elif command == 'decrease':
                         self.decrease_scale(*arguments)
+                    elif command == 'shiftup':
+                        self.shift_up(*arguments)
+                    elif command == 'shiftdown':
+                        self.shift_down(*arguments)
+                    elif command == 'zoomin':
+                        self.decrease_horiztonal_scale()
+                    elif command == 'zoomout':
+                        self.increase_horiztonal_scale()
+                    elif command == 'shiftleft':
+                        self.shift_left()
+                    elif command == 'shiftright':
+                        self.shift_right()
                     elif command == 'autoscale':
                         try:
                             scaleauto[arguments[0]] = True
@@ -413,7 +461,20 @@ class SSMBScopeControl:
         savename = self.scope.ask("SAVEON:FILE:NAME?").strip('"')
         return savename
 
-
+    def enable_display(self, *channels):
+        """
+        enables display of selected ``channels`` on the scope screen.
+        """
+        for channel in channels:
+            self.scope.write('DISPLAY:GLOBAL:' + channel + ':STATE ON')
+    
+    def disable_display(self, *channels):
+        """
+        disables display of selected ``channels`` on the scope screen.
+        """
+        for channel in channels:
+            self.scope.write('DISPLAY:GLOBAL:' + channel + ':STATE OFF')
+    
     def increase_scale(self, *channels):
         """
         increases the vertical scale for the given ``channels`` to the next higher scale.
@@ -433,3 +494,51 @@ class SSMBScopeControl:
             if currentscale > SMALLEST_SCALE:
                 print('SCOPE: decrease scale, channel', channel)
                 self.scope.write(format_command(channel + ":SCALE", smaller_scale(currentscale)))
+                
+    def increase_horiztonal_scale(self):
+        """
+        increases the horiztonal scale to the next higher scale.
+        """
+        currentscale = float(self.scope.ask("HOR:SCALE?"))
+        if currentscale < LARGEST_HORIZONTAL_SCALE:
+            print('SCOPE: increase horizontal scale')
+            self.scope.write(format_command("HOR:SCALE", larger_scale(currentscale)))
+        
+    def decrease_horiztonal_scale(self):
+        """
+        decreases the horiztonal scale to the next lower scale.
+        """
+        currentscale = float(self.scope.ask("HOR:SCALE?"))
+        if currentscale > SMALLEST_HORIZONTAL_SCALE:
+            print('SCOPE: decrease horizontal scale')
+            self.scope.write(format_command("HOR:SCALE", smaller_scale(currentscale)))
+    
+    def shift_up(self, *channels, n_divisions=0.5):
+        """
+        shifts the vertical position of the given ``channels`` up by ``n_divisions`` number of divisions
+        """
+        for channel in channels:
+            currentpos = float(self.scope.ask(channel + ":POS?"))
+            self.scope.write(format_command(channel + ":POS", currentpos-n_divisions))
+            
+    def shift_down(self, *channels, n_divisions=0.5):
+        """
+        shifts the vertical position of the given ``channels`` down by ``n_divisions`` number of divisions
+        """
+        for channel in channels:
+            currentpos = float(self.scope.ask(channel + ":POS?"))
+            self.scope.write(format_command(channel + ":POS", currentpos+n_divisions))
+    
+    def shift_left(self, screen_percent=10):
+        """
+        shifts the horizontal position left by ``screen_percent`` % of the screen width
+        """
+        currentpos = float(self.scope.ask("HOR:POS?"))
+        self.scope.write(format_command("HOR:POS", currentpos-screen_percent))
+            
+    def shift_right(self, screen_percent=10):
+        """
+        shifts the horizontal position right by ``screen_percent`` % of the screen width
+        """
+        currentpos = float(self.scope.ask("HOR:POS?"))
+        self.scope.write(format_command("HOR:POS", currentpos+screen_percent))
