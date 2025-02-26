@@ -71,9 +71,10 @@ class SSMBLiveAnalyzer:
             ### once all commands are completed, start checking for new data ###
             try:
                 date, data = self.data_queue.get(timeout = 0.1)
-                self.__analyzer.next_analysis(data = data, date_time = date, log_peakdata = self.logging, frf=self.__PV.get_frf())
-                self.result_queue.put((self.__analyzer.get_current_trace_analysis(), self.__analyzer.get_current_peakdata(), self.__analyzer.get_centerpeak_pos(), self.__analyzer.get_peakdata_length()))
-                self.__epics_queue.put(self.__analyzer.get_current_peakdata())
-                self.maxvalue_queue.put((self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=1), self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=2)))
+                if self.__analyzer.next_analysis(data = data, date_time = date, log_peakdata = self.logging, frf=self.__PV.get_frf()):
+                    # next_analysis returns True on success, only then export new results to queue
+                    self.result_queue.put((self.__analyzer.get_current_trace_analysis(), self.__analyzer.get_current_peakdata(), self.__analyzer.get_centerpeak_pos(), self.__analyzer.get_peakdata_length()))
+                    self.__epics_queue.put(self.__analyzer.get_current_peakdata())
+                    self.maxvalue_queue.put((self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=1), self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=2)))
             except queue.Empty:
                 pass # no new data, continue

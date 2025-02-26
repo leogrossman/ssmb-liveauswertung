@@ -466,7 +466,7 @@ class SSMBScopeControl:
         return savename
     
     def get_display_status(self):
-        return {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in channels}
+        return {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
 
     def enable_display(self, *channels):
         """
@@ -509,7 +509,7 @@ class SSMBScopeControl:
         currentscale = float(self.scope.ask("HOR:SCALE?"))
         if currentscale < LARGEST_HORIZONTAL_SCALE:
             print('SCOPE: increase horizontal scale')
-            self.scope.write(format_command("HOR:SCALE", larger_scale(currentscale)))
+            self.scope.write(format_command("HOR:SCALE", larger_horizontal_scale(currentscale)))
         
     def decrease_horiztonal_scale(self):
         """
@@ -518,7 +518,7 @@ class SSMBScopeControl:
         currentscale = float(self.scope.ask("HOR:SCALE?"))
         if currentscale > SMALLEST_HORIZONTAL_SCALE:
             print('SCOPE: decrease horizontal scale')
-            self.scope.write(format_command("HOR:SCALE", smaller_scale(currentscale)))
+            self.scope.write(format_command("HOR:SCALE", smaller_horizontal_scale(currentscale)))
     
     def shift_up(self, *channels, n_divisions=0.5):
         """
@@ -526,7 +526,7 @@ class SSMBScopeControl:
         """
         for channel in channels:
             currentpos = float(self.scope.ask(channel + ":POS?"))
-            self.scope.write(format_command(channel + ":POS", currentpos-n_divisions))
+            self.scope.write(format_command(channel + ":POS", currentpos+n_divisions))
             
     def shift_down(self, *channels, n_divisions=0.5):
         """
@@ -534,16 +534,16 @@ class SSMBScopeControl:
         """
         for channel in channels:
             currentpos = float(self.scope.ask(channel + ":POS?"))
-            self.scope.write(format_command(channel + ":POS", currentpos+n_divisions))
+            self.scope.write(format_command(channel + ":POS", currentpos-n_divisions))
     
-    def shift_left(self, screen_percent=10):
+    def shift_left(self, screen_percent=5):
         """
         shifts the horizontal position left by ``screen_percent`` % of the screen width
         """
         currentpos = float(self.scope.ask("HOR:POS?"))
         self.scope.write(format_command("HOR:POS", currentpos-screen_percent))
             
-    def shift_right(self, screen_percent=10):
+    def shift_right(self, screen_percent=5):
         """
         shifts the horizontal position right by ``screen_percent`` % of the screen width
         """

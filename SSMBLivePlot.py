@@ -110,6 +110,8 @@ class SSMBPlotting:
                 
                 datalength = len(traceanalyzer.trace)
                 skipping = datalength//plotlenOverview
+                if skipping < 1:
+                    skipping = 1
                 #skipping=2
                 try:
                     ax2.plot(traceanalyzer.trace[timecolumn].loc[::skipping]*1e9, traceanalyzer.trace[triggercolumn].loc[::skipping], 'grey')

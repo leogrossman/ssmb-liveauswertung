@@ -260,7 +260,7 @@ class SequenceAnalyzer:
         except (RuntimeError, FileNotFoundError) as e: # These errors are raised by TraceAnalyzer if the data could not be found or properly read, in this case nothing can be done with the current data set.
             print("Skipped dataset at", date_time, filepath)
             print("because:", e)
-            return
+            return False
         
         # Determine timestamp of the current data: Extract from Filename and file modification time, or use current time for direct data transfer.
         modtime = None
@@ -455,3 +455,4 @@ class SequenceAnalyzer:
         
         self.plot_index += 1
         print(f"dataset #{len(self.peakdata)} at {date_time}, {filename} done")
+        return True
