@@ -669,7 +669,7 @@ class SSMBWindow(tk.Frame):
         ### connect to scope ###
         try:
             print(f'Connecting to MSO-64 scope (IP: {scopeip})...') 
-            self._ctrl = SSMBScopeControl(scopeip, self._analyzer.data_queue, self._analyzer.maxvalue_queue)
+            self._ctrl = SSMBScopeControl(scopeip, self._analyzer.data_queue, self._analyzer.maxvalue_queue, autoset_time=True)
             idn = self._ctrl.get_id()
             print('Connection to SSMB scope successful. Scope ID:')
             print(idn)

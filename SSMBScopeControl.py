@@ -12,7 +12,7 @@ import pandas as pd
 import threading
 import queue
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def format_command(command, argument, form = "%g"):
     return command + " " + form % argument
@@ -82,7 +82,7 @@ def smaller_horizontal_scale(scale):
 
 class SSMBScopeControl:
     
-    def __init__(self, scopeip, data_queue, maxvalue_queue):
+    def __init__(self, scopeip, data_queue, maxvalue_queue, autoset_time=False):
         """
         Opens a vxi11 connection to the scope at ``scopeip`` and readys the scope control loop in a new thread. Communication via three queues:
          --control_queue: send commands for the scope here in the form ['command', (arguments, ...)] (queue item must be a *list*).
@@ -108,6 +108,8 @@ class SSMBScopeControl:
         self.status_queue = queue.Queue()
         self.__data_queue = data_queue
         self.__maxvalue_queue = maxvalue_queue
+        if autoset_time:
+            self.update_system_time()
         
     def start(self):
         """
@@ -251,7 +253,24 @@ class SSMBScopeControl:
             else:
                 i -= 1
             sleep(0.01)
-
+            
+    def update_system_time(self, timestamp=None, tweak=timedelta(seconds=0)):
+        """
+        updates system time of the scope with the provided ``timestamp`` (should be datetime object).
+        Uses this computer's system time if None provided.
+        
+        ``tweak`` (timedelta) is added to timestamp to account for transmission delay (default: 0 seconds, only applies for timestamp=None)
+        
+        Caution: The scope only allows changing the time by up to 1 hour and not across midnight!
+        So this may not work as expected!
+        """
+        if timestamp is None:
+            try:
+                timestamp = datetime.now() + tweak
+            except:
+                timestamp = datetime.now()
+        self.scope.write(timestamp.strftime('TIME "%H:%M:%S"'))
+        
     
     def recall_setup(self, path_to_setup_file='C:/Scope_Setup/SSMB_standard_20220519.set'):
         """
