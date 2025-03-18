@@ -806,89 +806,137 @@ class SSMBWindow(tk.Frame):
         self.__update_centerpos(event=None)
     
     def __scale_harm1_auto(self):
-        if self.__harm1autoscale:
-            self._ctrl.control_queue.put(['manuscale', 0])
-            self.__harm1autoscale = False
-            self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        else:
-            self._ctrl.control_queue.put(['autoscale', 0, self.__column_harm1])
-            self.__harm1autoscale = True
-            self.__harm1autoscaleBtn.configure(text='Automatic', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+        try:
+            if self.__harm1autoscale:
+                self._ctrl.control_queue.put(['manuscale', 0])
+                self.__harm1autoscale = False
+                self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            else:
+                self._ctrl.control_queue.put(['autoscale', 0, self.__column_harm1])
+                self.__harm1autoscale = True
+                self.__harm1autoscaleBtn.configure(text='Automatic', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+        except AttributeError:
+            print('Warning: Tried to enable/disable autoscale, but the program backend has not started!')
     
     def __scale_harm1_inc(self):
-        if self.__harm1autoscale:
-            self._ctrl.control_queue.put(['manuscale', 0])
-            self.__harm1autoscale = False
-            self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.control_queue.put(['increase', self.__column_harm1])
+        try:
+            if self.__harm1autoscale:
+                self._ctrl.control_queue.put(['manuscale', 0])
+                self.__harm1autoscale = False
+                self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self._ctrl.control_queue.put(['increase', self.__column_harm1])
+        except AttributeError:
+            print('Warning: Tried to zoom scope trace, but the program backend has not started!')
     
     def __scale_harm1_dec(self):
-        if self.__harm1autoscale:
-            self._ctrl.control_queue.put(['manuscale', 0])
-            self.__harm1autoscale = False
-            self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.control_queue.put(['decrease', self.__column_harm1])
+        try:
+            if self.__harm1autoscale:
+                self._ctrl.control_queue.put(['manuscale', 0])
+                self.__harm1autoscale = False
+                self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self._ctrl.control_queue.put(['decrease', self.__column_harm1])
+        except AttributeError:
+            print('Warning: Tried to zoom scope trace, but the program backend has not started!')
         
     def __shift_harm1_up(self):
-        self._ctrl.control_queue.put(['shiftup', self.__column_harm1])
+        try:
+            self._ctrl.control_queue.put(['shiftup', self.__column_harm1])
+        except AttributeError:
+            print('Warning: Tried to shift scope trace, but the program backend has not started!')
         
     def __shift_harm1_down(self):
-        self._ctrl.control_queue.put(['shiftdown', self.__column_harm1])
+        try:
+            self._ctrl.control_queue.put(['shiftdown', self.__column_harm1])
+        except AttributeError:
+            print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
     def __harm1_show_hide(self):
-        if self.__harm1shown:
-            self._ctrl.control_queue.put(['displayoff', self.__column_harm1])
-        else:
-            self._ctrl.control_queue.put(['displayon', self.__column_harm1])
+        try:
+            if self.__harm1shown:
+                self._ctrl.control_queue.put(['displayoff', self.__column_harm1])
+            else:
+                self._ctrl.control_queue.put(['displayon', self.__column_harm1])
+        except AttributeError:
+            print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
             
     
     def __scale_harm2_auto(self):
-        if self.__harm2autoscale:
-            self._ctrl.control_queue.put(['manuscale', 1])
-            self.__harm2autoscale = False
-            self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        else:
-            self._ctrl.control_queue.put(['autoscale', 1, self.__column_harm2])
-            self.__harm2autoscale = True
-            self.__harm2autoscaleBtn.configure(text='Automatic', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+        try:
+            if self.__harm2autoscale:
+                self._ctrl.control_queue.put(['manuscale', 1])
+                self.__harm2autoscale = False
+                self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            else:
+                self._ctrl.control_queue.put(['autoscale', 1, self.__column_harm2])
+                self.__harm2autoscale = True
+                self.__harm2autoscaleBtn.configure(text='Automatic', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
+        except AttributeError:
+            print('Warning: Tried to enable/disable autoscale, but the program backend has not started!')
     
     def __scale_harm2_inc(self):
-        if self.__harm2autoscale:
-            self._ctrl.control_queue.put(['manuscale', 1])
-            self.__harm2autoscale = False
-            self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.control_queue.put(['increase', self.__column_harm2])
+        try:
+            if self.__harm2autoscale:
+                self._ctrl.control_queue.put(['manuscale', 1])
+                self.__harm2autoscale = False
+                self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self._ctrl.control_queue.put(['increase', self.__column_harm2])
+        except AttributeError:
+            print('Warning: Tried to zoom scope trace, but the program backend has not started!')
     
     def __scale_harm2_dec(self):
-        if self.__harm2autoscale:
-            self._ctrl.control_queue.put(['manuscale', 1])
-            self.__harm2autoscale = False
-            self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        self._ctrl.control_queue.put(['decrease', self.__column_harm2])
+        try:
+            if self.__harm2autoscale:
+                self._ctrl.control_queue.put(['manuscale', 1])
+                self.__harm2autoscale = False
+                self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self._ctrl.control_queue.put(['decrease', self.__column_harm2])
+        except AttributeError:
+            print('Warning: Tried to zoom scope trace, but the program backend has not started!')
         
     def __shift_harm2_up(self):
-        self._ctrl.control_queue.put(['shiftup', self.__column_harm2])
+        try:
+            self._ctrl.control_queue.put(['shiftup', self.__column_harm2])
+        except AttributeError:
+            print('Warning: Tried to shift scope trace, but the program backend has not started!')
         
     def __shift_harm2_down(self):
-        self._ctrl.control_queue.put(['shiftdown', self.__column_harm2])
+        try:
+            self._ctrl.control_queue.put(['shiftdown', self.__column_harm2])
+        except AttributeError:
+            print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
     def __harm2_show_hide(self):
-        if self.__harm2shown:
-            self._ctrl.control_queue.put(['displayoff', self.__column_harm2])
-        else:
-            self._ctrl.control_queue.put(['displayon', self.__column_harm2])
+        try:
+            if self.__harm2shown:
+                self._ctrl.control_queue.put(['displayoff', self.__column_harm2])
+            else:
+                self._ctrl.control_queue.put(['displayon', self.__column_harm2])
+        except AttributeError:
+            print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
         
     def __scale_hor_inc(self):
-        self._ctrl.control_queue.put(['zoomout'])
+        try:
+            self._ctrl.control_queue.put(['zoomout'])
+        except AttributeError:
+            print('Warning: Tried to zoom scope trace, but the program backend has not started!')
     
     def __scale_hor_dec(self):
-        self._ctrl.control_queue.put(['zoomin'])
+        try:
+            self._ctrl.control_queue.put(['zoomin'])
+        except AttributeError:
+            print('Warning: Tried to zoom scope trace, but the program backend has not started!')
         
     def __shift_hor_left(self):
-        self._ctrl.control_queue.put(['shiftleft'])
+        try:
+            self._ctrl.control_queue.put(['shiftleft'])
+        except AttributeError:
+            print('Warning: Tried to shift scope trace, but the program backend has not started!')
         
     def __shift_hor_right(self):
-        self._ctrl.control_queue.put(['shiftright'])
+        try:
+            self._ctrl.control_queue.put(['shiftright'])
+        except AttributeError:
+            print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
     
     def main_loop(self):
