@@ -100,6 +100,7 @@ class SSMBScopeControl:
         from vxi11 import Instrument
         self.scope = Instrument(scopeip)
         self.channels = ["CH%d" % (i+1) for i in range(4)] # warning: self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
+        self.maths = ["MATH%d" % (i+1) for i in range(2)]
         self.dataranges = None # start with no ranges specified to get full data trace
         self.__trigger_armed = False
         self.go = False
@@ -163,6 +164,10 @@ class SSMBScopeControl:
                         self.enable_display(*arguments)
                     elif command == 'displayoff':
                         self.disable_display(*arguments)
+                    elif command == 'showmath':
+                        self.show_averaging(*arguments)
+                    elif command == 'hidemath':
+                        self.hide_averaging(*arguments)
                     elif command == 'increase':
                         self.increase_scale(*arguments)
                     elif command == 'decrease':
@@ -485,8 +490,29 @@ class SSMBScopeControl:
         return savename
     
     def get_display_status(self):
-        return {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
-
+        chs = {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
+        chs.update({math: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + math + ":STATE?"))) for math in self.maths})
+        return chs
+    
+    def get_math_averaging_length(self):
+        return {math: int(self.scope.ask("MATH:" + math + ":AVG:WEIGHT?")) for math in self.maths}
+    
+    def show_averaging(self, maths, averaginglength):
+        """
+        configures averaging length of selected ``maths`` and shows them on the scope screen.
+        """
+        for math in maths:
+            self.scope.write('DISPLAY:GLOBAL:' + math + ':STATE ON')
+            self.scope.write('MATH:' + math + ':AVG:MODE ON')
+            self.scope.write(format_command('MATH:' + math + ':AVG:WEIGHT', averaginglength, form='%d')) # the description in the programmer's manual for this command is a bit confusing, but it actually seems to be a number of averages
+    
+    def hide_averaging(self, maths):
+        """
+        hides selected ``maths`` on the scope screen.
+        """
+        for math in maths:
+            self.scope.write('DISPLAY:GLOBAL:' + math + ':STATE OFF')
+    
     def enable_display(self, *channels):
         """
         enables display of selected ``channels`` on the scope screen.
