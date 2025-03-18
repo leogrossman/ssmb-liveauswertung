@@ -155,20 +155,20 @@ class SSMBWindow(tk.Frame):
         print('Initialize plotting...')
         ### Initialize plotting module and create graphs ###
         self._plt = SSMBPlotting(self.__frame_harm1, self.__frame_harm2, figsize_overview=(6.8,2), figsize_detail=(2.5,2))
-        self._plt.get_canvas(overview=True, harm=1).grid(row=2, column=0, columnspan=8, padx=3, pady=3, sticky=tk.W)
-        self._plt.get_canvas(overview=False, harm=1, turn=1).grid(row=4, column=0, rowspan=8, padx=3, pady=3)
-        self._plt.get_canvas(overview=False, harm=1, turn=2).grid(row=4, column=3, rowspan=8, columnspan=3, padx=3, pady=3)
-        self._plt.get_canvas(overview=True, harm=2).grid(row=2, column=0, columnspan=8, padx=3, pady=3, sticky=tk.W)
-        self._plt.get_canvas(overview=False, harm=2, turn=1).grid(row=4, column=0, rowspan=8, padx=3, pady=3)
-        self._plt.get_canvas(overview=False, harm=2, turn=2).grid(row=4, column=3, rowspan=8, columnspan=3, padx=3, pady=3)
+        self._plt.get_canvas(overview=True, harm=1).grid(row=2, column=0, rowspan=6, columnspan=8, padx=3, pady=3, sticky=tk.W)
+        self._plt.get_canvas(overview=False, harm=1, turn=1).grid(row=10, column=0, rowspan=8, padx=3, pady=3)
+        self._plt.get_canvas(overview=False, harm=1, turn=2).grid(row=10, column=3, rowspan=8, columnspan=3, padx=3, pady=3)
+        self._plt.get_canvas(overview=True, harm=2).grid(row=2, column=0, rowspan=6, columnspan=8, padx=3, pady=3, sticky=tk.W)
+        self._plt.get_canvas(overview=False, harm=2, turn=1).grid(row=10, column=0, rowspan=8, padx=3, pady=3)
+        self._plt.get_canvas(overview=False, harm=2, turn=2).grid(row=10, column=3, rowspan=8, columnspan=3, padx=3, pady=3)
         print('done.')
         
         tk.Label(self.__frame_harm1, text='raw oscilloscope trace',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=1, column=0, sticky=tk.W)
-        tk.Label(self.__frame_harm1, text='first turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=0, sticky=tk.W)
-        tk.Label(self.__frame_harm1, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=3, columnspan=3, sticky=tk.W)
+        tk.Label(self.__frame_harm1, text='first turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=9, column=0, sticky=tk.W)
+        tk.Label(self.__frame_harm1, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=9, column=3, columnspan=3, sticky=tk.W)
         tk.Label(self.__frame_harm2, text='raw oscilloscope trace',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=1, column=0, sticky=tk.W)
-        tk.Label(self.__frame_harm2, text='first turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=0, sticky=tk.W)
-        tk.Label(self.__frame_harm2, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=3, column=3, columnspan=3, sticky=tk.W)
+        tk.Label(self.__frame_harm2, text='first turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=9, column=0, sticky=tk.W)
+        tk.Label(self.__frame_harm2, text='higher turn, background corrected',  relief=tk.RAISED, bd=1, bg='white', padx=10).grid(row=9, column=3, columnspan=3, sticky=tk.W)
         
         ### Scope scale buttons ###
         self.__harm1autoscale = False
@@ -189,6 +189,15 @@ class SSMBWindow(tk.Frame):
         self.__harm1showBtn = tk.Button(self.__frame_harm1, text='Trace shown', width=8, command=self.__harm1_show_hide)
         self.__harm1showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)
         
+        self.__math1shown = True
+        self.__math1showBtn = tk.Button(self.__frame_harm1, text='Avg. shown', width=8, command=self.__math1_show_hide)
+        self.__math1showBtn.grid(row=2, column=8, columnspan=2, sticky=tk.S)
+        
+        tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=3, column=8, columnspan=2, sticky=tk.S)
+        self.__math1avlen = tk.IntVar(self.master, value=0)
+        self.__math1avlenEtr = tk.Entry(self.__frame_harm1, width=10, textvariable = self.__math1avlen, validate = 'all', validatecommand = self.__int_validate_callback)
+        self.__math1avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
+        
         self.__harm2autoscale = False
         tk.Label(self.__frame_harm2, text='Scope: Vertical Scale', bg=self.__color_harm2).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
         self.__harm2autoscaleBtn = tk.Button(self.__frame_harm2, text='Manual', width=8, command=self.__scale_harm2_auto)
@@ -207,45 +216,54 @@ class SSMBWindow(tk.Frame):
         self.__harm2showBtn = tk.Button(self.__frame_harm2, text='Trace shown', width=8, command=self.__harm2_show_hide)
         self.__harm2showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)        
         
+        self.__math2shown = True
+        self.__math2showBtn = tk.Button(self.__frame_harm2, text='Avg. shown', width=8, command=self.__math2_show_hide)
+        self.__math2showBtn.grid(row=2, column=8, columnspan=2, sticky=tk.S)
+        
+        tk.Label(self.__frame_harm2, text='Avg. length', bg=self.__color_harm2).grid(row=3, column=8, columnspan=2, sticky=tk.S)
+        self.__math2avlen = tk.IntVar(self.master, value=0)
+        self.__math2avlenEtr = tk.Entry(self.__frame_harm2, width=10, textvariable = self.__math2avlen, validate = 'all', validatecommand = self.__int_validate_callback)
+        self.__math2avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
+        
         ### Turn and peak selection boxes for first harmonic ###
-        tk.Label(self.__frame_harm1, text='peak marker #1', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=3, column=1, columnspan=2)
+        tk.Label(self.__frame_harm1, text='peak marker #1', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=9, column=1, columnspan=2)
         self.__harm1t1_peak = tk.IntVar(self.master, value=0)
         self.__harm1t1_peakBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t1_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm1t1_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t1_peakBox.grid(row=5, column=2)
-        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=1, sticky=tk.E)
+        self.__harm1t1_peakBox.grid(row=11, column=2)
+        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=11, column=1, sticky=tk.E)
         
         self.__harm1t1_turn = tk.IntVar(self.master, value=1)
         self.__harm1t1_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t1_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm1t1_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t1_turnBox.grid(row=4, column=2)
-        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=1, sticky=tk.E)
+        self.__harm1t1_turnBox.grid(row=10, column=2)
+        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=10, column=1, sticky=tk.E)
         
-        tk.Label(self.__frame_harm1, text='peak marker #2', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=3, column=6, columnspan=2)
+        tk.Label(self.__frame_harm1, text='peak marker #2', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=9, column=6, columnspan=2)
         self.__harm1t2_peak = tk.IntVar(self.master, value=0)
         self.__harm1t2_peakBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t2_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm1t2_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t2_peakBox.grid(row=5, column=7)
-        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=6, sticky=tk.E)
+        self.__harm1t2_peakBox.grid(row=11, column=7)
+        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=11, column=6, sticky=tk.E)
         
         self.__harm1t2_turn = tk.IntVar(self.master, value=2)
         self.__harm1t2_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t2_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm1t2_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t2_turnBox.grid(row=4, column=7)
-        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=6, sticky=tk.E)
+        self.__harm1t2_turnBox.grid(row=10, column=7)
+        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=10, column=6, sticky=tk.E)
         
-        tk.Label(self.__frame_harm1, text='peak marker #3', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=3, column=8, columnspan=2)
+        tk.Label(self.__frame_harm1, text='peak marker #3', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=9, column=8, columnspan=2)
         self.__harm1t3_peak = tk.IntVar(self.master, value=1)
         self.__harm1t3_peakBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t3_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm1t3_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t3_peakBox.grid(row=5, column=9)
-        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=5, column=8, sticky=tk.E)
+        self.__harm1t3_peakBox.grid(row=11, column=9)
+        tk.Label(self.__frame_harm1, text='peak #', bg=self.__color_harm1).grid(row=11, column=8, sticky=tk.E)
         
         self.__harm1t3_turn = tk.IntVar(self.master, value=1)
         self.__harm1t3_turnBox = ttk.Combobox(self.__frame_harm1, textvariable = self.__harm1t3_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm1t3_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm1t3_turnBox.grid(row=4, column=9)
-        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=4, column=8, sticky=tk.E)
+        self.__harm1t3_turnBox.grid(row=10, column=9)
+        tk.Label(self.__frame_harm1, text='turn #', bg=self.__color_harm1).grid(row=10, column=8, sticky=tk.E)
         
         ### Result display Entries for first harmonic ###
         self.__harm1t1_peakampl = tk.StringVar(self.master, value=0)
@@ -253,85 +271,85 @@ class SSMBWindow(tk.Frame):
         self.__harm1t1_fluctuation = tk.StringVar(self.master, value=0)
         
         self.__harm1t1_peakamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t1_peakampl, state='readonly', width=11)
-        self.__harm1t1_peakamplEtr.grid(row=7, column=1, columnspan=2)
+        self.__harm1t1_peakamplEtr.grid(row=13, column=1, columnspan=2)
         self.__harm1t1_avgamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t1_avgampl, state='readonly', width=11)
-        self.__harm1t1_avgamplEtr.grid(row=9, column=1, columnspan=2)
+        self.__harm1t1_avgamplEtr.grid(row=15, column=1, columnspan=2)
         self.__harm1t1_fluctuationEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t1_fluctuation, state='readonly', width=11)
-        self.__harm1t1_fluctuationEtr.grid(row=11, column=1, columnspan=2)
+        self.__harm1t1_fluctuationEtr.grid(row=17, column=1, columnspan=2)
         
-        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=6, column=1, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=8, column=1, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=10, column=1, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=12, column=1, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=14, column=1, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=16, column=1, columnspan=2, sticky=tk.S)
         
         self.__harm1t2_peakampl = tk.StringVar(self.master, value=0)
         self.__harm1t2_avgampl = tk.StringVar(self.master, value=0)
         self.__harm1t2_fluctuation = tk.StringVar(self.master, value=0)
                 
         self.__harm1t2_peakamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t2_peakampl, state='readonly', width=11)
-        self.__harm1t2_peakamplEtr.grid(row=7, column=6, columnspan=2)
+        self.__harm1t2_peakamplEtr.grid(row=13, column=6, columnspan=2)
         self.__harm1t2_avgamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t2_avgampl, state='readonly', width=11)
-        self.__harm1t2_avgamplEtr.grid(row=9, column=6, columnspan=2)
+        self.__harm1t2_avgamplEtr.grid(row=15, column=6, columnspan=2)
         self.__harm1t2_fluctuationEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t2_fluctuation, state='readonly', width=11)
-        self.__harm1t2_fluctuationEtr.grid(row=11, column=6, columnspan=2)
+        self.__harm1t2_fluctuationEtr.grid(row=17, column=6, columnspan=2)
         
-        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=6, column=6, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=8, column=6, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=10, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=12, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=14, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=16, column=6, columnspan=2, sticky=tk.S)
         
         self.__harm1t3_peakampl = tk.StringVar(self.master, value=0)
         self.__harm1t3_avgampl = tk.StringVar(self.master, value=0)
         self.__harm1t3_fluctuation = tk.StringVar(self.master, value=0)
                 
         self.__harm1t3_peakamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t3_peakampl, state='readonly', width=11)
-        self.__harm1t3_peakamplEtr.grid(row=7, column=8, columnspan=2)
+        self.__harm1t3_peakamplEtr.grid(row=13, column=8, columnspan=2)
         self.__harm1t3_avgamplEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t3_avgampl, state='readonly', width=11)
-        self.__harm1t3_avgamplEtr.grid(row=9, column=8, columnspan=2)
+        self.__harm1t3_avgamplEtr.grid(row=15, column=8, columnspan=2)
         self.__harm1t3_fluctuationEtr = tk.Entry(self.__frame_harm1, textvariable = self.__harm1t3_fluctuation, state='readonly', width=11)
-        self.__harm1t3_fluctuationEtr.grid(row=11, column=8, columnspan=2)
+        self.__harm1t3_fluctuationEtr.grid(row=17, column=8, columnspan=2)
         
-        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=6, column=8, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=8, column=8, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=10, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='signal height', bg=self.__color_harm1).grid(row=12, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='average height', bg=self.__color_harm1).grid(row=14, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='rms fluctuation', bg=self.__color_harm1).grid(row=16, column=8, columnspan=2, sticky=tk.S)
         
         ### Turn and peak selection boxes for second harmonic ###
-        tk.Label(self.__frame_harm2, text='peak marker #1', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=3, column=1, columnspan=2)
+        tk.Label(self.__frame_harm2, text='peak marker #1', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=9, column=1, columnspan=2)
         self.__harm2t1_peak = tk.IntVar(self.master, value=0)
         self.__harm2t1_peakBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t1_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm2t1_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t1_peakBox.grid(row=5, column=2)
-        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=1, sticky=tk.E)
+        self.__harm2t1_peakBox.grid(row=11, column=2)
+        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=11, column=1, sticky=tk.E)
         
         self.__harm2t1_turn = tk.IntVar(self.master, value=1)
         self.__harm2t1_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t1_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm2t1_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t1_turnBox.grid(row=4, column=2)
-        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=1, sticky=tk.E)
+        self.__harm2t1_turnBox.grid(row=10, column=2)
+        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=10, column=1, sticky=tk.E)
         
-        tk.Label(self.__frame_harm2, text='peak marker #2', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=3, column=6, columnspan=2)
+        tk.Label(self.__frame_harm2, text='peak marker #2', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=9, column=6, columnspan=2)
         self.__harm2t2_peak = tk.IntVar(self.master, value=0)
         self.__harm2t2_peakBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t2_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm2t2_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t2_peakBox.grid(row=5, column=7)
-        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=6, sticky=tk.E)
+        self.__harm2t2_peakBox.grid(row=11, column=7)
+        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=11, column=6, sticky=tk.E)
         
         self.__harm2t2_turn = tk.IntVar(self.master, value=2)
         self.__harm2t2_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t2_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm2t2_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t2_turnBox.grid(row=4, column=7)
-        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=6, sticky=tk.E)
+        self.__harm2t2_turnBox.grid(row=10, column=7)
+        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=10, column=6, sticky=tk.E)
         
-        tk.Label(self.__frame_harm2, text='peak marker #3', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=3, column=8, columnspan=2)
+        tk.Label(self.__frame_harm2, text='peak marker #3', bg=self.__color_harm2, relief=tk.GROOVE).grid(row=9, column=8, columnspan=2)
         self.__harm2t3_peak = tk.IntVar(self.master, value=1)
         self.__harm2t3_peakBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t3_peak, values=[-1,0,1], state='readonly', width=4)
         self.__harm2t3_peakBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t3_peakBox.grid(row=5, column=9)
-        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=5, column=8, sticky=tk.E)
+        self.__harm2t3_peakBox.grid(row=11, column=9)
+        tk.Label(self.__frame_harm2, text='peak #', bg=self.__color_harm2).grid(row=11, column=8, sticky=tk.E)
         
         self.__harm2t3_turn = tk.IntVar(self.master, value=1)
         self.__harm2t3_turnBox = ttk.Combobox(self.__frame_harm2, textvariable = self.__harm2t3_turn, values=[1,2,3], state='readonly', width=4)
         self.__harm2t3_turnBox.bind('<<ComboboxSelected>>', self.__update_epics_parameters)
-        self.__harm2t3_turnBox.grid(row=4, column=9)
-        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=4, column=8, sticky=tk.E)
+        self.__harm2t3_turnBox.grid(row=10, column=9)
+        tk.Label(self.__frame_harm2, text='turn #', bg=self.__color_harm2).grid(row=10, column=8, sticky=tk.E)
         
         ### Result display Entries for second harmonic ###
         self.__harm2t1_peakampl = tk.StringVar(self.master, value=0)
@@ -339,45 +357,45 @@ class SSMBWindow(tk.Frame):
         self.__harm2t1_fluctuation = tk.StringVar(self.master, value=0)
                 
         self.__harm2t1_peakamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t1_peakampl, state='readonly', width=11)
-        self.__harm2t1_peakamplEtr.grid(row=7, column=1, columnspan=2)
+        self.__harm2t1_peakamplEtr.grid(row=13, column=1, columnspan=2)
         self.__harm2t1_avgamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t1_avgampl, state='readonly', width=11)
-        self.__harm2t1_avgamplEtr.grid(row=9, column=1, columnspan=2)
+        self.__harm2t1_avgamplEtr.grid(row=15, column=1, columnspan=2)
         self.__harm2t1_fluctuationEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t1_fluctuation, state='readonly', width=11)
-        self.__harm2t1_fluctuationEtr.grid(row=11, column=1, columnspan=2)
+        self.__harm2t1_fluctuationEtr.grid(row=17, column=1, columnspan=2)
         
-        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=6, column=1, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=8, column=1, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=10, column=1, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=12, column=1, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=14, column=1, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=16, column=1, columnspan=2, sticky=tk.S)
         
         self.__harm2t2_peakampl = tk.StringVar(self.master, value=0)
         self.__harm2t2_avgampl = tk.StringVar(self.master, value=0)
         self.__harm2t2_fluctuation = tk.StringVar(self.master, value=0)
                 
         self.__harm2t2_peakamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t2_peakampl, state='readonly', width=11)
-        self.__harm2t2_peakamplEtr.grid(row=7, column=6, columnspan=2)
+        self.__harm2t2_peakamplEtr.grid(row=13, column=6, columnspan=2)
         self.__harm2t2_avgamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t2_avgampl, state='readonly', width=11)
-        self.__harm2t2_avgamplEtr.grid(row=9, column=6, columnspan=2)
+        self.__harm2t2_avgamplEtr.grid(row=15, column=6, columnspan=2)
         self.__harm2t2_fluctuationEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t2_fluctuation, state='readonly', width=11)
-        self.__harm2t2_fluctuationEtr.grid(row=11, column=6, columnspan=2)
+        self.__harm2t2_fluctuationEtr.grid(row=17, column=6, columnspan=2)
                 
-        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=6, column=6, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=8, column=6, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=10, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=12, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=14, column=6, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=16, column=6, columnspan=2, sticky=tk.S)
         
         self.__harm2t3_peakampl = tk.StringVar(self.master, value=0)
         self.__harm2t3_avgampl = tk.StringVar(self.master, value=0)
         self.__harm2t3_fluctuation = tk.StringVar(self.master, value=0)
                 
         self.__harm2t3_peakamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t3_peakampl, state='readonly', width=11)
-        self.__harm2t3_peakamplEtr.grid(row=7, column=8, columnspan=2)
+        self.__harm2t3_peakamplEtr.grid(row=13, column=8, columnspan=2)
         self.__harm2t3_avgamplEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t3_avgampl, state='readonly', width=11)
-        self.__harm2t3_avgamplEtr.grid(row=9, column=8, columnspan=2)
+        self.__harm2t3_avgamplEtr.grid(row=15, column=8, columnspan=2)
         self.__harm2t3_fluctuationEtr = tk.Entry(self.__frame_harm2, textvariable = self.__harm2t3_fluctuation, state='readonly', width=11)
-        self.__harm2t3_fluctuationEtr.grid(row=11, column=8, columnspan=2)
+        self.__harm2t3_fluctuationEtr.grid(row=17, column=8, columnspan=2)
                 
-        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=6, column=8, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=8, column=8, columnspan=2, sticky=tk.S)
-        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=10, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='signal height', bg=self.__color_harm2).grid(row=12, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='average height', bg=self.__color_harm2).grid(row=14, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='rms fluctuation', bg=self.__color_harm2).grid(row=16, column=8, columnspan=2, sticky=tk.S)
         
         
         ### Evaluation configuration panel ###
@@ -624,6 +642,8 @@ class SSMBWindow(tk.Frame):
             self.__center2manu(statechange=False)
             self.__config_centerpos.set(setparameters['centerpeak_pos'])
         self.__config_avlen.set(setparameters['averaginglength'])
+        self.__math1avlen.set(setparameters['averaginglength'])
+        self.__math2avlen.set(setparameters['averaginglength'])
         self.__config_maxrev.set(setparameters['maxturns'])
         self.__config_maxpeak.set(setparameters['sidepeaks'])
         self.__config_wincent.set(setparameters['windowcenter'])
@@ -859,6 +879,9 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
             
+    def __math1_show_hide(self):
+        pass
+            
     
     def __scale_harm2_auto(self):
         try:
@@ -914,6 +937,10 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
         
+    def __math2_show_hide(self):
+        pass
+    
+    
     def __scale_hor_inc(self):
         try:
             self._ctrl.control_queue.put(['zoomout'])
