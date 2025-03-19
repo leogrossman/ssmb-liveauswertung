@@ -886,7 +886,7 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
             
-    def __math1_config(self):
+    def __math1_config(self, event=None): # we want to register this function for key binding, this will hand over key event
         try:
             if self.__math1shown:
                 self._ctrl.control_queue.put(['configmath', {self.__column_math1: self.__math1avlen.get()}])
@@ -959,7 +959,7 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
         
-    def __math2_config(self):
+    def __math2_config(self, event=None): # we want to register this function for key binding, this will hand over key event
         try:
             if self.__math2shown:
                 self._ctrl.control_queue.put(['configmath', {self.__column_math2: self.__math2avlen.get()}])
