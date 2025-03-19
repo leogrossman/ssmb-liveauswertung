@@ -74,6 +74,9 @@ class SSMBWindow(tk.Frame):
         self.__column_harm2 = 'CH4'
         self.__column_laser = 'CH1'
         self.__column_trigger = 'CH2'
+        self.__column_math1 = 'MATH2'
+        self.__column_math2 = 'MATH1'
+        # for us, math1=harm1, math2=harm2, but on the scope MATH2 is for harm1 and vice versa
         
         ### color constants ###
         self.__color_background = 'LightSkyBlue1'
@@ -196,6 +199,8 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=3, column=8, columnspan=2, sticky=tk.S)
         self.__math1avlen = tk.IntVar(self.master, value=0)
         self.__math1avlenEtr = tk.Entry(self.__frame_harm1, width=10, textvariable = self.__math1avlen, validate = 'all', validatecommand = self.__int_validate_callback)
+        self.__math1avlenEtr.bind('<Return>', self.__math1_config)
+        self.__math1avlenEtr.bind('<KP_Enter>', self.__math1_config)
         self.__math1avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
         
         self.__harm2autoscale = False
@@ -223,6 +228,8 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_harm2, text='Avg. length', bg=self.__color_harm2).grid(row=3, column=8, columnspan=2, sticky=tk.S)
         self.__math2avlen = tk.IntVar(self.master, value=0)
         self.__math2avlenEtr = tk.Entry(self.__frame_harm2, width=10, textvariable = self.__math2avlen, validate = 'all', validatecommand = self.__int_validate_callback)
+        self.__math2avlenEtr.bind('<Return>', self.__math2_config)
+        self.__math2avlenEtr.bind('<KP_Enter>', self.__math2_config)
         self.__math2avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
         
         ### Turn and peak selection boxes for first harmonic ###
@@ -879,8 +886,23 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
             
+    def __math1_config(self):
+        try:
+            if self.__math1shown:
+                self._ctrl.control_queue.put(['configmath', {self.__column_math1: self.__math1avlen.get()}])
+                self._ctrl.control_queue.put(['showmath', self.__column_math1])
+        except AttributeError:
+            print('Warning: Tried to update averaging (math), but the program backend has not started!')
+    
     def __math1_show_hide(self):
-        pass
+        try:
+            if self.__math1shown:
+                self._ctrl.control_queue.put(['hidemath', self.__column_math1])
+            else:
+                self._ctrl.control_queue.put(['configmath', {self.__column_math1: self.__math1avlen.get()}])
+                self._ctrl.control_queue.put(['showmath', self.__column_math1])
+        except AttributeError:
+            print('Warning: Tried to show/hide scope trace (math), but the program backend has not started!')
             
     
     def __scale_harm2_auto(self):
@@ -937,8 +959,23 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to show/hide scope trace, but the program backend has not started!')
         
+    def __math2_config(self):
+        try:
+            if self.__math2shown:
+                self._ctrl.control_queue.put(['configmath', {self.__column_math2: self.__math2avlen.get()}])
+                self._ctrl.control_queue.put(['showmath', self.__column_math2])
+        except AttributeError:
+            print('Warning: Tried to update averaging (math), but the program backend has not started!')
+            
     def __math2_show_hide(self):
-        pass
+        try:
+            if self.__math2shown:
+                self._ctrl.control_queue.put(['hidemath', self.__column_math2])
+            else:
+                self._ctrl.control_queue.put(['configmath', {self.__column_math2: self.__math2avlen.get()}])
+                self._ctrl.control_queue.put(['showmath', self.__column_math2])
+        except AttributeError:
+            print('Warning: Tried to show/hide scope trace (math), but the program backend has not started!')
     
     
     def __scale_hor_inc(self):
@@ -1013,7 +1050,18 @@ class SSMBWindow(tk.Frame):
             self.__harm2showBtn.configure(text='Trace shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         else:
             self.__harm2showBtn.configure(text='Trace hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
-            
+        
+        self.__math1shown = displaystatus[self.__column_math1]
+        if self.__math1shown:
+            self.__math1showBtn.configure(text='Avg. shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        else:
+            self.__math1showBtn.configure(text='Avg. hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        
+        self.__math2shown = displaystatus[self.__column_math2]
+        if self.__math2shown:
+            self.__math2showBtn.configure(text='Avg. shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        else:
+            self.__math2showBtn.configure(text='Avg. hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
         
         if seqlen is not None:
             self.__acq_sequencelen.set(seqlen)

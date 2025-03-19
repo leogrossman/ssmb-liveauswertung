@@ -101,6 +101,7 @@ class SSMBScopeControl:
         self.scope = Instrument(scopeip)
         self.channels = ["CH%d" % (i+1) for i in range(4)] # warning: self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
         self.maths = ["MATH%d" % (i+1) for i in range(2)]
+        self.__averaginglength = {math: 20 for math in self.maths}
         self.dataranges = None # start with no ranges specified to get full data trace
         self.__trigger_armed = False
         self.go = False
@@ -164,6 +165,8 @@ class SSMBScopeControl:
                         self.enable_display(*arguments)
                     elif command == 'displayoff':
                         self.disable_display(*arguments)
+                    elif command == 'configmath':
+                        self.configure_averaging(*arguments)
                     elif command == 'showmath':
                         self.show_averaging(*arguments)
                     elif command == 'hidemath':
@@ -497,16 +500,20 @@ class SSMBScopeControl:
     def get_math_averaging_length(self):
         return {math: int(self.scope.ask("MATH:" + math + ":AVG:WEIGHT?")) for math in self.maths}
     
-    def show_averaging(self, maths, averaginglength):
+    def configure_averaging(self, averaginglength_dict):
+        self.__averaginglength.update(averaginglength_dict)
+    
+    def show_averaging(self, *maths):
         """
         configures averaging length of selected ``maths`` and shows them on the scope screen.
         """
         for math in maths:
             self.scope.write('DISPLAY:GLOBAL:' + math + ':STATE ON')
             self.scope.write('MATH:' + math + ':AVG:MODE ON')
-            self.scope.write(format_command('MATH:' + math + ':AVG:WEIGHT', averaginglength, form='%d')) # the description in the programmer's manual for this command is a bit confusing, but it actually seems to be a number of averages
+            self.scope.write(format_command('MATH:' + math + ':AVG:WEIGHT', self.__averaginglength[math], form='%d'))
+            # the description in the programmer's manual for the :AVG:WEIGHT command is a bit confusing, but it actually seems to be a number of averages
     
-    def hide_averaging(self, maths):
+    def hide_averaging(self, *maths):
         """
         hides selected ``maths`` on the scope screen.
         """
