@@ -52,7 +52,7 @@ class SequenceAnalyzer:
         self.reset_sequence()
         self.prev_horizontal_info = (0,0,0)
         self.prev_datetime = datetime(1970,1,1)
-        self.chunk_index = -1 # should start with zero, but will be incremented for the first data trace as the time comparison will fail
+        self.chunk_index = 0
         
         self.plot = plot
         self.plotmax = plotmax
@@ -277,17 +277,24 @@ class SequenceAnalyzer:
             currentdatetime = datetime.now()
         
         # compare the horizontal axis of the current and last dataset. If there is a differece, we cannot correlate the time axis and have to restart averaging and centerpeak determination, if active.
-        if not currenttrace.compare_horizontal_info(*self.prev_horizontal_info) or currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
-            # reset the averaging, reset the automatic centerpeak position and increment the chunk_index,
+        horizontal_scale_changed = not currenttrace.compare_horizontal_info(*self.prev_horizontal_info)
+        if horizontal_scale_changed or currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
+            # reset the averaging, reset the automatic centerpeak position
             # if either the horizontal scale has changed or the last trace is more than X seconds old
             self.averagecache = ([],[])            
             self.lasercache = []
             self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
             if self.centerpeak_determination_automatic:
                 self.centerpeak_pos = None # reset the centerpeak_pos to "unknown" only for automatic determination
-            self.chunk_index += 1
             if self.plot_all_chunks:
                 self.plot_index = 0   # restart plotting
+        try:
+            if log_peakdata and (horizontal_scale_changed or currentdatetime-self.get_last_peakdata().datetime > timedelta(seconds=self.time_tolerance)):
+                # increment the chunk_index
+                # if either the horizontal scale has changed or the last logged trace is more than X seconds old
+                self.chunk_index += 1
+        except TypeError: # no previous logged data, ignore
+            pass
         self.prev_horizontal_info = currenttrace.get_horizontal_info()
         self.prev_datetime = currentdatetime
         
