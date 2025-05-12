@@ -293,7 +293,7 @@ class SequenceAnalyzer:
                 # increment the chunk_index
                 # if either the horizontal scale has changed or the last logged trace is more than X seconds old
                 self.chunk_index += 1
-        except TypeError: # no previous logged data, ignore
+        except AttributeError: # no previous logged data, ignore
             pass
         self.prev_horizontal_info = currenttrace.get_horizontal_info()
         self.prev_datetime = currentdatetime
@@ -461,5 +461,5 @@ class SequenceAnalyzer:
             self.peakdatacache = self.peakdatacache.drop(index=range(peaklendiff))
         
         self.plot_index += 1
-        print(f"dataset #{len(self.peakdata)} at {date_time}, {filename} done")
+        print(f"dataset #{len(self.peakdata)} (chunk #{self.chunk_index}) at {date_time}, {filename} done")
         return True
