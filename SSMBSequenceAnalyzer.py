@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
 from SSMBTraceAnalyzer import TraceAnalyzer
 import SSMBTraceAnalyzerUtilities as util
 
-DFCOLUMNS = ['datetime', 'filename', 'chunk_index', 'centerpeak_pos', 'averaging_length_harm1', 'averaging_length_harm2', 'fluctuation_length_harm1', 'fluctuation_length_harm2']
+DFCOLUMNS = ['filename', 'chunk_index', 'centerpeak_pos', 'averaging_length_harm1', 'averaging_length_harm2', 'fluctuation_length_harm1', 'fluctuation_length_harm2']
 
 class SequenceAnalyzer:
     
@@ -52,7 +52,7 @@ class SequenceAnalyzer:
         self.reset_sequence()
         self.prev_horizontal_info = (0,0,0)
         self.prev_datetime = datetime(1970,1,1)
-        self.chunk_index = 0
+        self.chunk_index = -1 # should start with zero, but will be incremented for the first data trace as the time comparison will fail
         
         self.plot = plot
         self.plotmax = plotmax
@@ -277,24 +277,17 @@ class SequenceAnalyzer:
             currentdatetime = datetime.now()
         
         # compare the horizontal axis of the current and last dataset. If there is a differece, we cannot correlate the time axis and have to restart averaging and centerpeak determination, if active.
-        horizontal_scale_changed = not currenttrace.compare_horizontal_info(*self.prev_horizontal_info)
-        if horizontal_scale_changed or currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
-            # reset the averaging, reset the automatic centerpeak position
+        if not currenttrace.compare_horizontal_info(*self.prev_horizontal_info) or currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
+            # reset the averaging, reset the automatic centerpeak position and increment the chunk_index,
             # if either the horizontal scale has changed or the last trace is more than X seconds old
             self.averagecache = ([],[])            
             self.lasercache = []
             self.peakdatacache = pd.DataFrame(columns=DFCOLUMNS)
             if self.centerpeak_determination_automatic:
                 self.centerpeak_pos = None # reset the centerpeak_pos to "unknown" only for automatic determination
+            self.chunk_index += 1
             if self.plot_all_chunks:
                 self.plot_index = 0   # restart plotting
-        try:
-            if log_peakdata and (horizontal_scale_changed or currentdatetime-self.get_last_peakdata().datetime > timedelta(seconds=self.time_tolerance)):
-                # increment the chunk_index
-                # if either the horizontal scale has changed or the last logged trace is more than X seconds old
-                self.chunk_index += 1
-        except AttributeError: # no previous logged data, ignore
-            pass
         self.prev_horizontal_info = currenttrace.get_horizontal_info()
         self.prev_datetime = currentdatetime
         
@@ -333,7 +326,7 @@ class SequenceAnalyzer:
             del self.lasercache[0:avglendifflaser]
             
         # Setup output dictionary
-        md = dict(datetime=currentdatetime, filename=filename, chunk_index=self.chunk_index, centerpeak_pos = self.centerpeak_pos, laser_maximum=lasermax, laser_position=laserpos, laser_maximum_avg=lasermean, averaging_length_laser=len(self.lasercache)+1)
+        md = dict(filename=filename, chunk_index=self.chunk_index, centerpeak_pos = self.centerpeak_pos, laser_maximum=lasermax, laser_position=laserpos, laser_maximum_avg=lasermean, averaging_length_laser=len(self.lasercache)+1)
         if modtime is not None:
             md.update({'modtime': modtime})
             
@@ -448,9 +441,9 @@ class SequenceAnalyzer:
         
         # copy trace object and data to prevent getting changing or incomplete data when reading current_peakdata at a random time
         self.recent_trace = deepcopy(currenttrace)
-        self.recent_peakdata = md.copy()
+        self.recent_peakdata = pd.Series(md, name=currentdatetime)
         if log_peakdata:
-            self.peakdata = pd.concat([self.peakdata, pd.DataFrame(md, index=[0])], ignore_index = True)#, sort=True)
+            self.peakdata = pd.concat([self.peakdata, self.recent_peakdata.to_frame().T])
         
         # append peakdata output to peakdatacache for next flucuation calculation
         self.peakdatacache = pd.concat([self.peakdatacache, pd.DataFrame(md, index=[0])], ignore_index = True)#, sort=True)
@@ -461,5 +454,5 @@ class SequenceAnalyzer:
             self.peakdatacache = self.peakdatacache.drop(index=range(peaklendiff))
         
         self.plot_index += 1
-        print(f"dataset #{len(self.peakdata)} (chunk #{self.chunk_index}) at {date_time}, {filename} done")
+        print(f"dataset #{len(self.peakdata)} at {date_time}, {filename} done")
         return True
