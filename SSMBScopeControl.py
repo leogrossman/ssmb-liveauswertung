@@ -306,14 +306,20 @@ class SSMBScopeControl:
         checks if there is a new acquisition available since the last check. returns True if this is the case, False otherwise.
         Attention: This only works reliably if the method is called repeatedly on a time scale faster than the trigger frequency!
         """
-        state = self.get_trigger_state()
-        if state == "READY" or state == "ARMED":
-            self.__trigger_armed = True
-            return False
-        if (state == "TRIGGER" or state == "SAVE") and self.__trigger_armed:
-            self.__trigger_armed = False
-            return True
-        return False
+        numacq = int(self.scope.ask('ACQ:NUMACQ?'))
+        #state = self.get_trigger_state()
+        #if state == "READY" or state == "ARMED":
+        #    self.__trigger_armed = True
+        #    return False
+        #if (state == "TRIGGER" or state == "SAVE") and self.__trigger_armed:
+        #    self.__trigger_armed = False
+        #    return True
+        try:
+            numacqchanged = numacq != self.lastnumacq
+        except:
+            numacqchanged = False
+        self.lastnumacq = numacq
+        return numacqchanged
     
     def get_acq_status(self):
         """
