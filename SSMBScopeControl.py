@@ -268,16 +268,50 @@ class SSMBScopeControl:
         Uses this computer's system time if None provided.
         
         ``tweak`` (timedelta) is added to timestamp to account for transmission delay (default: 0 seconds, only applies for timestamp=None)
-        
-        Caution: The scope only allows changing the time by up to 1 hour and not across midnight!
-        So this may not work as expected!
         """
         if timestamp is None:
             try:
-                timestamp = datetime.now() + tweak
+                target = datetime.now() + tweak
             except:
-                timestamp = datetime.now()
-        self.scope.write(timestamp.strftime('TIME "%H:%M:%S"'))
+                target = datetime.now()
+        else:
+            target = timestamp
+        # get date and time currently set on scope:
+        scopedate = self.scope.ask('DATE?')
+        scopetime = self.scope.ask('TIME?')
+        scopedatetime = datetime.strptime('_'.join((scopedate, scopetime)), '"%Y-%m-%d"_"%H:%M:%S"')
+        
+        if target.date() != scopedatetime.date():
+            # the scope is set to a different day than the current day, correcting this is currently not supported
+            print('Warning: Scope clock not updated: Scope is not set to the current day!')
+            return
+        
+        delta = (target - scopedatetime).total_seconds()
+        hours = abs(delta)/3600
+        if hours >= 24:
+            print('Warning: Setting scope clock failed (delta too large)!')
+            return
+        
+        # if delta is larger than 1 hour, set time in 1 hour increments
+        for h in range(int(hours)):
+            if delta < 0:
+                hourincrement = scopedatetime - timedelta(minutes = (h+1)*59.9)
+            else:
+                hourincrement = scopedatetime + timedelta(minutes = (h+1)*59.9)
+            self.scope.write(hourincrement.strftime('TIME "%H:%M:%S"'))
+            sleep(0.5)
+            
+        # set target time again for maximum precision and write final timestamp to scope
+        if timestamp is None:
+            try:
+                target = datetime.now() + tweak
+            except:
+                target = datetime.now()
+        else:
+            target = timestamp
+        self.scope.write(target.strftime('TIME "%H:%M:%S"'))
+        
+        
         
     
     def recall_setup(self, path_to_setup_file='C:/Scope_Setup/SSMB_standard_20220519.set'):
