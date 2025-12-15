@@ -564,6 +564,14 @@ class SSMBScopeControl:
         """
         for channel in channels:
             self.scope.write('DISPLAY:GLOBAL:' + channel + ':STATE OFF')
+            
+    # TODO make compatible for math...
+    '''
+    DISplay:WAVEView<x>:MATH:MATH<x>:
+    VERTical:POSition
+    DISplay:WAVEView<x>:MATH:MATH<x>:
+    VERTical:SCAle
+    '''
     
     def increase_scale(self, *channels):
         """

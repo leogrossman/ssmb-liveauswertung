@@ -198,7 +198,7 @@ class SSMBWindow(tk.Frame):
         
         tk.Label(self.__frame_harm1, text='⬉\nbuttons\nact on:', bg=self.__color_harm1).grid(row=2, column=7, rowspan=2, sticky=tk.S)        
         self.__harm1controlselectmath = False
-        self.__harm1controlselectBtn = tk.Button(self.__frame_harm1, text='Trace', width=4)#, command=self.__math1_show_hide)
+        self.__harm1controlselectBtn = tk.Button(self.__frame_harm1, text='Trace', width=4, command=self.__scale_select_harm1)
         self.__harm1controlselectBtn.grid(row=4, column=7, sticky=tk.N)
         
         tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=3, column=8, columnspan=2, sticky=tk.S)
@@ -839,6 +839,10 @@ class SSMBWindow(tk.Frame):
         
     def __scale_select_harm1(self):
         self.__harm1controlselectmath = not self.__harm1controlselectmath
+        if self.__harm1controlselectmath:
+            self.__harm1controlselectBtn.configure(text='Avg.', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        else:
+            self.__harm1controlselectBtn.configure(text='Trace', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
     
     def __scale_harm1_auto(self):
         try:
@@ -855,7 +859,7 @@ class SSMBWindow(tk.Frame):
     
     def __scale_harm1_inc(self):
         try:
-            if self.__harm1autoscale:
+            if self.__harm1autoscale and not self.__harm1controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 0])
                 self.__harm1autoscale = False
                 self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
@@ -865,7 +869,7 @@ class SSMBWindow(tk.Frame):
     
     def __scale_harm1_dec(self):
         try:
-            if self.__harm1autoscale:
+            if self.__harm1autoscale and not self.__harm1controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 0])
                 self.__harm1autoscale = False
                 self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
