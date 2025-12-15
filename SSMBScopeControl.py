@@ -103,7 +103,6 @@ class SSMBScopeControl:
         self.maths = ["MATH%d" % (i+1) for i in range(2)]
         self.__averaginglength = {math: 20 for math in self.maths}
         self.dataranges = None # start with no ranges specified to get full data trace
-        self.__trigger_armed = False
         self.go = False
         self.__thread = threading.Thread(target=self.__control_loop)
         self.control_queue = queue.Queue()
@@ -341,13 +340,6 @@ class SSMBScopeControl:
         Attention: This only works reliably if the method is called repeatedly on a time scale faster than the trigger frequency!
         """
         numacq = int(self.scope.ask('ACQ:NUMACQ?'))
-        #state = self.get_trigger_state()
-        #if state == "READY" or state == "ARMED":
-        #    self.__trigger_armed = True
-        #    return False
-        #if (state == "TRIGGER" or state == "SAVE") and self.__trigger_armed:
-        #    self.__trigger_armed = False
-        #    return True
         try:
             numacqchanged = numacq != self.lastnumacq
         except:
