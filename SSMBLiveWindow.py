@@ -194,7 +194,12 @@ class SSMBWindow(tk.Frame):
         
         self.__math1shown = True
         self.__math1showBtn = tk.Button(self.__frame_harm1, text='Avg. shown', width=8, command=self.__math1_show_hide)
-        self.__math1showBtn.grid(row=2, column=8, columnspan=2, sticky=tk.S)
+        self.__math1showBtn.grid(row=2, column=8, columnspan=2)        
+        
+        tk.Label(self.__frame_harm1, text='⬉\nbuttons\nact on:', bg=self.__color_harm1).grid(row=2, column=7, rowspan=2, sticky=tk.S)        
+        self.__harm1controlselectmath = False
+        self.__harm1controlselectBtn = tk.Button(self.__frame_harm1, text='Trace', width=4)#, command=self.__math1_show_hide)
+        self.__harm1controlselectBtn.grid(row=4, column=7, sticky=tk.N)
         
         tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=3, column=8, columnspan=2, sticky=tk.S)
         self.__math1avlen = tk.IntVar(self.master, value=0)
@@ -831,6 +836,9 @@ class SSMBWindow(tk.Frame):
     def __center2center(self):
         self.__config_centerpos.set(self.__config_winwidth.get()/2)
         self.__update_centerpos(event=None)
+        
+    def __scale_select_harm1(self):
+        self.__harm1controlselectmath = not self.__harm1controlselectmath
     
     def __scale_harm1_auto(self):
         try:
@@ -903,7 +911,10 @@ class SSMBWindow(tk.Frame):
                 self._ctrl.control_queue.put(['showmath', self.__column_math1])
         except AttributeError:
             print('Warning: Tried to show/hide scope trace (math), but the program backend has not started!')
-            
+    
+    
+    def __scale_select_harm2(self):
+        self.__harm2controlselectmath = not self.__harm2controlselectmath
     
     def __scale_harm2_auto(self):
         try:
