@@ -337,9 +337,8 @@ class SSMBScopeControl:
     def check_for_new_acqusition(self):
         """
         checks if there is a new acquisition available since the last check. returns True if this is the case, False otherwise.
-        Attention: This only works reliably if the method is called repeatedly on a time scale faster than the trigger frequency!
         """
-        numacq = int(self.scope.ask('ACQ:NUMACQ?'))
+        numacq = self.get_num_acq()
         try:
             numacqchanged = numacq != self.lastnumacq
         except:
