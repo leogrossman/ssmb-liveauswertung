@@ -76,7 +76,6 @@ class SSMBWindow(tk.Frame):
         self.__column_trigger = 'CH2'
         self.__column_math1 = 'MATH2'
         self.__column_math2 = 'MATH1'
-        # for us, math1=harm1, math2=harm2, but on the scope MATH2 is for harm1 and vice versa
         
         ### color constants ###
         self.__color_background = 'LightSkyBlue1'
@@ -681,9 +680,17 @@ class SSMBWindow(tk.Frame):
         except KeyError:
             print('Information: Data column name parameter "harm1column_name" not in configuration file "%s", using default %s' % (self.__cfg_name, self.__column_harm1))
         try:
+            self.__column_math1 = self._cfg[self.__cfg_key]['harm1avg_name']
+        except KeyError:
+            print('Information: Data column name parameter "harm1avg_name" not in configuration file "%s", using default %s' % (self.__cfg_name, self.__column_math1))
+        try:
             self.__column_harm2 = self._cfg[self.__cfg_key]['harm2column_name']
         except KeyError:
             print('Information: Data column name parameter "harm2column_name" not in configuration file "%s", using default %s' % (self.__cfg_name, self.__column_harm2))
+        try:
+            self.__column_math2 = self._cfg[self.__cfg_key]['harm2avg_name']
+        except KeyError:
+            print('Information: Data column name parameter "harm2avg_name" not in configuration file "%s", using default %s' % (self.__cfg_name, self.__column_math2))
         try:
             self.__column_laser = self._cfg[self.__cfg_key]['lasercolumn_name']
         except KeyError:
@@ -692,7 +699,18 @@ class SSMBWindow(tk.Frame):
             self.__column_trigger = self._cfg[self.__cfg_key]['trigcolumn_name']
         except KeyError:
             print('Information: Data column name parameter "trigcolumn_name" not in configuration file "%s", using default %s' % (self.__cfg_name, self.__column_trigger))
-            
+        
+        print()
+        print('using column names:')
+        print('time:     ', self.__column_time)
+        print('harm1:    ', self.__column_harm1)
+        print('harm1avg: ', self.__column_math1)
+        print('harm2:    ', self.__column_harm2)
+        print('harm2avg: ', self.__column_math2)
+        print('laser:    ', self.__column_laser)
+        print('trigger:  ', self.__column_trigger)
+        print()
+        
         ### connect to scope ###
         try:
             print(f'Connecting to MSO-64 scope (IP: {scopeip})...') 
