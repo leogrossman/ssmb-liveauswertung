@@ -564,20 +564,18 @@ class SSMBScopeControl:
         """
         for channel in channels:
             self.scope.write('DISPLAY:GLOBAL:' + channel + ':STATE OFF')
-            
-    # TODO make compatible for math...
+
+
     '''
-    the commands
+    the functions increase/deacrease_scale and shift_up/down    
+    now use the commands
     DISplay:WAVEView<x>:MATH:MATH<x>:VERTical:POSition
     DISplay:WAVEView<x>:MATH:MATH<x>:VERTical:SCAle
-    seem to work for WAVEView1. Unclear when other WAVEViews may be used...
-    
-    Conversely, we can probably also use
+    and    
     DISplay:WAVEView1:CH<1>:VERTical:POSition
     DISplay:WAVEView1:CH<1>:VERTical:SCAle
-    for the raw channels, I can find no difference in the funcionality...
-    
-    BUT note the additional :MATH: in the commands above, how can this be handled?
+    to enable functionality for MATH channels as well.
+    These seem to work for WAVEView1. and appear identical to the CH<x>:SCALE/POS commands for the raw channels. Unclear when other WAVEViews may be used... So look here for unexpected behaviour...    
     '''
     
     def increase_scale(self, *channels):
@@ -585,20 +583,24 @@ class SSMBScopeControl:
         increases the vertical scale for the given ``channels`` to the next higher scale.
         """
         for channel in channels:
-            currentscale = float(self.scope.ask(channel + ":SCALE?"))
+            if 'MATH' in channel.upper():
+                channel = 'MATH:' + channel
+            currentscale = float(self.scope.ask("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE?"))
             if currentscale < LARGEST_SCALE:
                 print('SCOPE: increase scale, channel', channel)
-                self.scope.write(format_command(channel + ":SCALE", larger_scale(currentscale)))
+                self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE", larger_scale(currentscale)))
         
     def decrease_scale(self, *channels):
         """
         decreases the vertical scale for the given ``channels`` to the next lower scale.
         """
-        for channel in channels:
-            currentscale = float(self.scope.ask(channel + ":SCALE?"))
+        for channel in channels:            
+            if 'MATH' in channel.upper():
+                channel = 'MATH:' + channel
+            currentscale = float(self.scope.ask("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE?"))
             if currentscale > SMALLEST_SCALE:
                 print('SCOPE: decrease scale, channel', channel)
-                self.scope.write(format_command(channel + ":SCALE", smaller_scale(currentscale)))
+                self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE", smaller_scale(currentscale)))
                 
     def increase_horiztonal_scale(self):
         """
@@ -622,17 +624,21 @@ class SSMBScopeControl:
         """
         shifts the vertical position of the given ``channels`` up by ``n_divisions`` number of divisions
         """
-        for channel in channels:
-            currentpos = float(self.scope.ask(channel + ":POS?"))
-            self.scope.write(format_command(channel + ":POS", currentpos+n_divisions))
+        for channel in channels:            
+            if 'MATH' in channel.upper():
+                channel = 'MATH:' + channel
+            currentpos = float(self.scope.ask("DISPLAY:WAVEView1:" + channel + ":VERTICAL:POS?"))
+            self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:POS", currentpos+n_divisions))
             
     def shift_down(self, *channels, n_divisions=0.5):
         """
         shifts the vertical position of the given ``channels`` down by ``n_divisions`` number of divisions
         """
-        for channel in channels:
-            currentpos = float(self.scope.ask(channel + ":POS?"))
-            self.scope.write(format_command(channel + ":POS", currentpos-n_divisions))
+        for channel in channels:            
+            if 'MATH' in channel.upper():
+                channel = 'MATH:' + channel
+            currentpos = float(self.scope.ask("DISPLAY:WAVEView1:" + channel + ":VERTICAL:POS?"))
+            self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:POS", currentpos-n_divisions))
     
     def shift_left(self, screen_percent=5):
         """
