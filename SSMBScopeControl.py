@@ -567,10 +567,17 @@ class SSMBScopeControl:
             
     # TODO make compatible for math...
     '''
-    DISplay:WAVEView<x>:MATH:MATH<x>:
-    VERTical:POSition
-    DISplay:WAVEView<x>:MATH:MATH<x>:
-    VERTical:SCAle
+    the commands
+    DISplay:WAVEView<x>:MATH:MATH<x>:VERTical:POSition
+    DISplay:WAVEView<x>:MATH:MATH<x>:VERTical:SCAle
+    seem to work for WAVEView1. Unclear when other WAVEViews may be used...
+    
+    Conversely, we can probably also use
+    DISplay:WAVEView1:CH<1>:VERTical:POSition
+    DISplay:WAVEView1:CH<1>:VERTical:SCAle
+    for the raw channels, I can find no difference in the funcionality...
+    
+    BUT note the additional :MATH: in the commands above, how can this be handled?
     '''
     
     def increase_scale(self, *channels):
