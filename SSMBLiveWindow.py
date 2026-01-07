@@ -228,7 +228,12 @@ class SSMBWindow(tk.Frame):
         
         self.__math2shown = True
         self.__math2showBtn = tk.Button(self.__frame_harm2, text='Avg. shown', width=8, command=self.__math2_show_hide)
-        self.__math2showBtn.grid(row=2, column=8, columnspan=2, sticky=tk.S)
+        self.__math2showBtn.grid(row=2, column=8, columnspan=2)
+        
+        tk.Label(self.__frame_harm2, text='⬉\nbuttons\nact on:', bg=self.__color_harm2).grid(row=2, column=7, rowspan=2, sticky=tk.S)
+        self.__harm2controlselectmath = False
+        self.__harm2controlselectBtn = tk.Button(self.__frame_harm2, text='Trace', width=4, command=self.__scale_select_harm2)
+        self.__harm2controlselectBtn.grid(row=4, column=7, sticky=tk.N)
         
         tk.Label(self.__frame_harm2, text='Avg. length', bg=self.__color_harm2).grid(row=3, column=8, columnspan=2, sticky=tk.S)
         self.__math2avlen = tk.IntVar(self.master, value=0)
@@ -836,13 +841,16 @@ class SSMBWindow(tk.Frame):
     def __center2center(self):
         self.__config_centerpos.set(self.__config_winwidth.get()/2)
         self.__update_centerpos(event=None)
-        
+    
+    
     def __scale_select_harm1(self):
         self.__harm1controlselectmath = not self.__harm1controlselectmath
         if self.__harm1controlselectmath:
             self.__harm1controlselectBtn.configure(text='Avg.', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+            self.__harm1autoscaleBtn.configure(state='disabled')
         else:
             self.__harm1controlselectBtn.configure(text='Trace', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self.__harm1autoscaleBtn.configure(state='normal')
     
     def __scale_harm1_auto(self):
         try:
@@ -919,7 +927,13 @@ class SSMBWindow(tk.Frame):
     
     def __scale_select_harm2(self):
         self.__harm2controlselectmath = not self.__harm2controlselectmath
-    
+        if self.__harm2controlselectmath:
+            self.__harm2controlselectBtn.configure(text='Avg.', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+            self.__harm2autoscaleBtn.configure(state='disabled')
+        else:
+            self.__harm2controlselectBtn.configure(text='Trace', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self.__harm2autoscaleBtn.configure(state='normal')
+
     def __scale_harm2_auto(self):
         try:
             if self.__harm2autoscale:

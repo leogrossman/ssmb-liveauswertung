@@ -134,7 +134,7 @@ class SSMBScopeControl:
         checkseqlen = False
         scalelen = 20
         scaleauto = [False, False]
-        scalechannel = ['CH3', 'CH4'] # TODO this is hard-coded!?
+        scalechannel = ['CH3', 'CH4'] # TODO this is hard-coded!? ==> this is just a starting default, will be set properly on autoscale activation
         scalemaxcache = ([],[])
         while self.go:
             while self.control_queue.qsize(): # iterate as long as there are items to get in the control queue
