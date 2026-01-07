@@ -871,7 +871,7 @@ class SSMBWindow(tk.Frame):
                 self._ctrl.control_queue.put(['manuscale', 0])
                 self.__harm1autoscale = False
                 self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['increase', self.__column_harm1])
+            self._ctrl.control_queue.put(['increase', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
     
@@ -881,19 +881,19 @@ class SSMBWindow(tk.Frame):
                 self._ctrl.control_queue.put(['manuscale', 0])
                 self.__harm1autoscale = False
                 self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['decrease', self.__column_harm1])
+            self._ctrl.control_queue.put(['decrease', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
         
     def __shift_harm1_up(self):
         try:
-            self._ctrl.control_queue.put(['shiftup', self.__column_harm1])
+            self._ctrl.control_queue.put(['shiftup', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
         
     def __shift_harm1_down(self):
         try:
-            self._ctrl.control_queue.put(['shiftdown', self.__column_harm1])
+            self._ctrl.control_queue.put(['shiftdown', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
@@ -949,33 +949,33 @@ class SSMBWindow(tk.Frame):
     
     def __scale_harm2_inc(self):
         try:
-            if self.__harm2autoscale:
+            if self.__harm2autoscale and not self.__harm2controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 1])
                 self.__harm2autoscale = False
                 self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['increase', self.__column_harm2])
+            self._ctrl.control_queue.put(['increase', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
     
     def __scale_harm2_dec(self):
         try:
-            if self.__harm2autoscale:
+            if self.__harm2autoscale and not self.__harm2controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 1])
                 self.__harm2autoscale = False
                 self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['decrease', self.__column_harm2])
+            self._ctrl.control_queue.put(['decrease', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
         
     def __shift_harm2_up(self):
         try:
-            self._ctrl.control_queue.put(['shiftup', self.__column_harm2])
+            self._ctrl.control_queue.put(['shiftup', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
         
     def __shift_harm2_down(self):
         try:
-            self._ctrl.control_queue.put(['shiftdown', self.__column_harm2])
+            self._ctrl.control_queue.put(['shiftdown', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
