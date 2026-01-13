@@ -189,18 +189,23 @@ class SSMBWindow(tk.Frame):
         
         self.__harm1shown = True
         self.__harm1showBtn = tk.Button(self.__frame_harm1, text='Trace shown', width=8, command=self.__harm1_show_hide)
-        self.__harm1showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)
+        self.__harm1showBtn.grid(row=2, column=8, columnspan=2)
         
         self.__math1shown = True
         self.__math1showBtn = tk.Button(self.__frame_harm1, text='Avg. shown', width=8, command=self.__math1_show_hide)
-        self.__math1showBtn.grid(row=2, column=8, columnspan=2, sticky=tk.S)
+        self.__math1showBtn.grid(row=3, column=8, columnspan=2)
         
-        tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=3, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='button\naction:', bg=self.__color_harm1).grid(row=0, column=8, rowspan=2)
+        self.__harm1controlselectmath = False
+        self.__harm1controlselectBtn = tk.Button(self.__frame_harm1, text='Trace', width=3, command=self.__scale_select_harm1)
+        self.__harm1controlselectBtn.grid(row=0, column=9, rowspan=2)
+        
+        tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=4, column=8, columnspan=2, sticky=tk.S)
         self.__math1avlen = tk.IntVar(self.master, value=0)
         self.__math1avlenEtr = tk.Entry(self.__frame_harm1, width=10, textvariable = self.__math1avlen, validate = 'all', validatecommand = self.__int_validate_callback)
         self.__math1avlenEtr.bind('<Return>', self.__math1_config)
         self.__math1avlenEtr.bind('<KP_Enter>', self.__math1_config)
-        self.__math1avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
+        self.__math1avlenEtr.grid(row=5, column=8, columnspan=2, sticky=tk.N)
         
         self.__harm2autoscale = False
         tk.Label(self.__frame_harm2, text='Scope: Vertical Scale', bg=self.__color_harm2).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
@@ -218,18 +223,23 @@ class SSMBWindow(tk.Frame):
         
         self.__harm2shown = True
         self.__harm2showBtn = tk.Button(self.__frame_harm2, text='Trace shown', width=8, command=self.__harm2_show_hide)
-        self.__harm2showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)        
+        self.__harm2showBtn.grid(row=2, column=8, columnspan=2)
         
         self.__math2shown = True
         self.__math2showBtn = tk.Button(self.__frame_harm2, text='Avg. shown', width=8, command=self.__math2_show_hide)
-        self.__math2showBtn.grid(row=2, column=8, columnspan=2, sticky=tk.S)
+        self.__math2showBtn.grid(row=3, column=8, columnspan=2)
         
-        tk.Label(self.__frame_harm2, text='Avg. length', bg=self.__color_harm2).grid(row=3, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='button\naction:', bg=self.__color_harm2).grid(row=0, column=8, rowspan=2)
+        self.__harm2controlselectmath = False
+        self.__harm2controlselectBtn = tk.Button(self.__frame_harm2, text='Trace', width=3, command=self.__scale_select_harm2)
+        self.__harm2controlselectBtn.grid(row=0, column=9, rowspan=2)
+        
+        tk.Label(self.__frame_harm2, text='Avg. length', bg=self.__color_harm2).grid(row=4, column=8, columnspan=2, sticky=tk.S)
         self.__math2avlen = tk.IntVar(self.master, value=0)
         self.__math2avlenEtr = tk.Entry(self.__frame_harm2, width=10, textvariable = self.__math2avlen, validate = 'all', validatecommand = self.__int_validate_callback)
         self.__math2avlenEtr.bind('<Return>', self.__math2_config)
         self.__math2avlenEtr.bind('<KP_Enter>', self.__math2_config)
-        self.__math2avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
+        self.__math2avlenEtr.grid(row=5, column=8, columnspan=2, sticky=tk.N)
         
         ### Turn and peak selection boxes for first harmonic ###
         tk.Label(self.__frame_harm1, text='peak marker #1', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=9, column=1, columnspan=2)
@@ -850,6 +860,16 @@ class SSMBWindow(tk.Frame):
         self.__config_centerpos.set(self.__config_winwidth.get()/2)
         self.__update_centerpos(event=None)
     
+    
+    def __scale_select_harm1(self):
+        self.__harm1controlselectmath = not self.__harm1controlselectmath
+        if self.__harm1controlselectmath:
+            self.__harm1controlselectBtn.configure(text='Avg.', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+            self.__harm1autoscaleBtn.configure(state='disabled')
+        else:
+            self.__harm1controlselectBtn.configure(text='Trace', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self.__harm1autoscaleBtn.configure(state='normal')
+    
     def __scale_harm1_auto(self):
         try:
             if self.__harm1autoscale:
@@ -865,33 +885,33 @@ class SSMBWindow(tk.Frame):
     
     def __scale_harm1_inc(self):
         try:
-            if self.__harm1autoscale:
+            if self.__harm1autoscale and not self.__harm1controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 0])
                 self.__harm1autoscale = False
                 self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['increase', self.__column_harm1])
+            self._ctrl.control_queue.put(['increase', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
     
     def __scale_harm1_dec(self):
         try:
-            if self.__harm1autoscale:
+            if self.__harm1autoscale and not self.__harm1controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 0])
                 self.__harm1autoscale = False
                 self.__harm1autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['decrease', self.__column_harm1])
+            self._ctrl.control_queue.put(['decrease', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
         
     def __shift_harm1_up(self):
         try:
-            self._ctrl.control_queue.put(['shiftup', self.__column_harm1])
+            self._ctrl.control_queue.put(['shiftup', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
         
     def __shift_harm1_down(self):
         try:
-            self._ctrl.control_queue.put(['shiftdown', self.__column_harm1])
+            self._ctrl.control_queue.put(['shiftdown', self.__column_math1 if self.__harm1controlselectmath else self.__column_harm1])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
@@ -921,8 +941,17 @@ class SSMBWindow(tk.Frame):
                 self._ctrl.control_queue.put(['showmath', self.__column_math1])
         except AttributeError:
             print('Warning: Tried to show/hide scope trace (math), but the program backend has not started!')
-            
     
+    
+    def __scale_select_harm2(self):
+        self.__harm2controlselectmath = not self.__harm2controlselectmath
+        if self.__harm2controlselectmath:
+            self.__harm2controlselectBtn.configure(text='Avg.', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+            self.__harm2autoscaleBtn.configure(state='disabled')
+        else:
+            self.__harm2controlselectBtn.configure(text='Trace', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self.__harm2autoscaleBtn.configure(state='normal')
+
     def __scale_harm2_auto(self):
         try:
             if self.__harm2autoscale:
@@ -938,33 +967,33 @@ class SSMBWindow(tk.Frame):
     
     def __scale_harm2_inc(self):
         try:
-            if self.__harm2autoscale:
+            if self.__harm2autoscale and not self.__harm2controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 1])
                 self.__harm2autoscale = False
                 self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['increase', self.__column_harm2])
+            self._ctrl.control_queue.put(['increase', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
     
     def __scale_harm2_dec(self):
         try:
-            if self.__harm2autoscale:
+            if self.__harm2autoscale and not self.__harm2controlselectmath: # only disable autoscale if we change raw data trace scale
                 self._ctrl.control_queue.put(['manuscale', 1])
                 self.__harm2autoscale = False
                 self.__harm2autoscaleBtn.configure(text='Manual', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-            self._ctrl.control_queue.put(['decrease', self.__column_harm2])
+            self._ctrl.control_queue.put(['decrease', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to zoom scope trace, but the program backend has not started!')
         
     def __shift_harm2_up(self):
         try:
-            self._ctrl.control_queue.put(['shiftup', self.__column_harm2])
+            self._ctrl.control_queue.put(['shiftup', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
         
     def __shift_harm2_down(self):
         try:
-            self._ctrl.control_queue.put(['shiftdown', self.__column_harm2])
+            self._ctrl.control_queue.put(['shiftdown', self.__column_math2 if self.__harm2controlselectmath else self.__column_harm2])
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
