@@ -190,23 +190,23 @@ class SSMBWindow(tk.Frame):
         
         self.__harm1shown = True
         self.__harm1showBtn = tk.Button(self.__frame_harm1, text='Trace shown', width=8, command=self.__harm1_show_hide)
-        self.__harm1showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)
+        self.__harm1showBtn.grid(row=2, column=8, columnspan=2)
         
         self.__math1shown = True
         self.__math1showBtn = tk.Button(self.__frame_harm1, text='Avg. shown', width=8, command=self.__math1_show_hide)
-        self.__math1showBtn.grid(row=2, column=8, columnspan=2)        
+        self.__math1showBtn.grid(row=3, column=8, columnspan=2)
         
-        tk.Label(self.__frame_harm1, text='⬉\nbuttons\nact on:', bg=self.__color_harm1).grid(row=2, column=7, rowspan=2, sticky=tk.S)        
+        tk.Label(self.__frame_harm1, text='button\naction:', bg=self.__color_harm1).grid(row=0, column=8, rowspan=2)
         self.__harm1controlselectmath = False
-        self.__harm1controlselectBtn = tk.Button(self.__frame_harm1, text='Trace', width=4, command=self.__scale_select_harm1)
-        self.__harm1controlselectBtn.grid(row=4, column=7, sticky=tk.N)
+        self.__harm1controlselectBtn = tk.Button(self.__frame_harm1, text='Trace', width=3, command=self.__scale_select_harm1)
+        self.__harm1controlselectBtn.grid(row=0, column=9, rowspan=2)
         
-        tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=3, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=4, column=8, columnspan=2, sticky=tk.S)
         self.__math1avlen = tk.IntVar(self.master, value=0)
         self.__math1avlenEtr = tk.Entry(self.__frame_harm1, width=10, textvariable = self.__math1avlen, validate = 'all', validatecommand = self.__int_validate_callback)
         self.__math1avlenEtr.bind('<Return>', self.__math1_config)
         self.__math1avlenEtr.bind('<KP_Enter>', self.__math1_config)
-        self.__math1avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
+        self.__math1avlenEtr.grid(row=5, column=8, columnspan=2, sticky=tk.N)
         
         self.__harm2autoscale = False
         tk.Label(self.__frame_harm2, text='Scope: Vertical Scale', bg=self.__color_harm2).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
@@ -224,23 +224,23 @@ class SSMBWindow(tk.Frame):
         
         self.__harm2shown = True
         self.__harm2showBtn = tk.Button(self.__frame_harm2, text='Trace shown', width=8, command=self.__harm2_show_hide)
-        self.__harm2showBtn.grid(row=0, column=8, columnspan=2, rowspan=2)        
+        self.__harm2showBtn.grid(row=2, column=8, columnspan=2)
         
         self.__math2shown = True
         self.__math2showBtn = tk.Button(self.__frame_harm2, text='Avg. shown', width=8, command=self.__math2_show_hide)
-        self.__math2showBtn.grid(row=2, column=8, columnspan=2)
+        self.__math2showBtn.grid(row=3, column=8, columnspan=2)
         
-        tk.Label(self.__frame_harm2, text='⬉\nbuttons\nact on:', bg=self.__color_harm2).grid(row=2, column=7, rowspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='button\naction:', bg=self.__color_harm2).grid(row=0, column=8, rowspan=2)
         self.__harm2controlselectmath = False
-        self.__harm2controlselectBtn = tk.Button(self.__frame_harm2, text='Trace', width=4, command=self.__scale_select_harm2)
-        self.__harm2controlselectBtn.grid(row=4, column=7, sticky=tk.N)
+        self.__harm2controlselectBtn = tk.Button(self.__frame_harm2, text='Trace', width=3, command=self.__scale_select_harm2)
+        self.__harm2controlselectBtn.grid(row=0, column=9, rowspan=2)
         
-        tk.Label(self.__frame_harm2, text='Avg. length', bg=self.__color_harm2).grid(row=3, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='Avg. length', bg=self.__color_harm2).grid(row=4, column=8, columnspan=2, sticky=tk.S)
         self.__math2avlen = tk.IntVar(self.master, value=0)
         self.__math2avlenEtr = tk.Entry(self.__frame_harm2, width=10, textvariable = self.__math2avlen, validate = 'all', validatecommand = self.__int_validate_callback)
         self.__math2avlenEtr.bind('<Return>', self.__math2_config)
         self.__math2avlenEtr.bind('<KP_Enter>', self.__math2_config)
-        self.__math2avlenEtr.grid(row=4, column=8, columnspan=2, sticky=tk.N)
+        self.__math2avlenEtr.grid(row=5, column=8, columnspan=2, sticky=tk.N)
         
         ### Turn and peak selection boxes for first harmonic ###
         tk.Label(self.__frame_harm1, text='peak marker #1', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=9, column=1, columnspan=2)
