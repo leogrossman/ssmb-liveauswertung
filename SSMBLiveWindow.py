@@ -683,7 +683,7 @@ class SSMBWindow(tk.Frame):
         self.__harm1t1_peakBox.configure(values=peaklist)
         self.__harm2t1_peakBox.configure(values=peaklist)
         self.__harm1t2_peakBox.configure(values=peaklist)
-        self.__harm2t2_peakBox.configure(values=peaklist)        
+        self.__harm2t2_peakBox.configure(values=peaklist)
         self.__harm1t3_peakBox.configure(values=peaklist)
         self.__harm2t3_peakBox.configure(values=peaklist)
         
@@ -807,6 +807,11 @@ class SSMBWindow(tk.Frame):
             self.__harm1t2_peak.set(maxp)
         if self.__harm1t2_peak.get() < -maxp:
             self.__harm1t2_peak.set(-maxp)
+        self.__harm1t3_peakBox.configure(values=peaklist)
+        if self.__harm1t3_peak.get() > maxp:
+            self.__harm1t3_peak.set(maxp)
+        if self.__harm1t3_peak.get() < -maxp:
+            self.__harm1t3_peak.set(-maxp)
         self.__harm2t1_peakBox.configure(values=peaklist)
         if self.__harm2t1_peak.get() > maxp:
             self.__harm2t1_peak.set(maxp)
@@ -817,6 +822,11 @@ class SSMBWindow(tk.Frame):
             self.__harm2t2_peak.set(maxp)
         if self.__harm2t2_peak.get() < -maxp:
             self.__harm2t2_peak.set(-maxp)
+        self.__harm2t3_peakBox.configure(values=peaklist)
+        if self.__harm2t3_peak.get() > maxp:
+            self.__harm2t3_peak.set(maxp)
+        if self.__harm2t3_peak.get() < -maxp:
+            self.__harm2t3_peak.set(-maxp)
         self.__update_epics_parameters()
             
     def __update_window(self, event):
