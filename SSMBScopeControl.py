@@ -131,6 +131,7 @@ class SSMBScopeControl:
         acqnumber = 0
         savestatus = None
         displaystatus = None
+        triggerstatus = None
         checkseqlen = False
         scalelen = 20
         scaleauto = [False, False]
@@ -154,6 +155,12 @@ class SSMBScopeControl:
                         self.start_acq_sequence(*arguments)
                     elif command == 'seqlen':
                         checkseqlen = True
+                    elif command == 'force':
+                        self.force_trigger()
+                    elif command == 'seqtrig':
+                        self.sequence_trigger()
+                    elif command == 'normtrig':
+                        self.edge_trigger()
                     elif command == 'dataranges':
                         self.set_dataranges(*arguments)
                     elif command == 'savestart':
@@ -240,23 +247,25 @@ class SSMBScopeControl:
                         print(type(e), e)
                 i = 0 # check for acqusition status immediately after the wait caused by acquiring data!
             
-            # then check acquisition status, saving status, and display status
+            # then check acquisition status, saving status, display status, trigger status
             if i <= 0: # checking aquisition status every 20 loops (200 ms) suffices
                 i = 20
                 acqstate_new = self.get_acq_status()
                 acqnumber_new = self.get_num_acq()
                 savestatus_new = self.get_data_saving_status()
                 displaystatus_new = self.get_display_status()
-                if acqstate != acqstate_new or acqnumber != acqnumber_new or savestatus != savestatus_new or displaystatus != displaystatus_new or checkseqlen:
+                triggerstatus_new = self.get_trigger_mode()
+                if acqstate != acqstate_new or acqnumber != acqnumber_new or savestatus != savestatus_new or displaystatus != displaystatus_new or triggerstatus != triggerstatus_new or checkseqlen:
                     if checkseqlen or acqstate_new == 'SEQUENCE': # also update sequence length when new sequence was started (could have been changed and started on the scope)
-                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, self.get_sequence_length()])
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, triggerstatus_new, self.get_sequence_length()])
                         checkseqlen = False
                     else:
-                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new])
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, triggerstatus_new])
                     acqstate = acqstate_new
                     acqnumber = acqnumber_new
                     savestatus = savestatus_new
                     displaystatus = displaystatus_new
+                    triggerstatus = triggerstatus_new
             else:
                 i -= 1
             sleep(0.01)
@@ -396,7 +405,31 @@ class SSMBScopeControl:
         Stops data acquisition on the scope.
         """
         self.scope.write('ACQ:STATE STOP')
-    
+        
+    def force_trigger(self):
+        """
+        forces a trigger event on the scope.
+        """
+        self.scope.write('TRIGGER FORCE')
+        
+    def sequence_trigger(self):
+        """
+        sets the scope to sequence trigger mode.
+        """
+        self.scope.write('TRIG:B:STATE ON')
+
+    def edge_trigger(self):
+        """
+        sets the scope to egde (standard) trigger mode.
+        """
+        self.scope.write('TRIG:B:STATE OFF')
+        
+    def get_trigger_mode(self):
+        """
+        returns True for sequence trigger mode, false for standard trigger mode
+        """
+        return bool(int(self.scope.ask('TRIG:B:STATE?')))
+        
     def get_clipping_status(self):
         """
         Returns the clipping status of all active channels (given by the channels list of the scope control object) as a boolean list.

@@ -512,6 +512,13 @@ class SSMBWindow(tk.Frame):
         self.__horshiftrightBtn = tk.Button(self.__frame_saving, text='➡', width=2, command=self.__shift_hor_right)
         self.__horshiftrightBtn.grid(row=2, column=4)
         
+        self.__trigseq = False
+        tk.Label(self.__frame_saving, text='Trigger:', bg=self.__color_saving).grid(row=2, column=5, columnspan=2, sticky=tk.E)
+        self.__trigseqBtn = tk.Button(self.__frame_saving, text='Normal', width=8, command=self.__trigger_sequence)
+        self.__trigseqBtn.grid(row=2, column=7)
+        self.__horscaledownBtn = tk.Button(self.__frame_saving, text='Force!', width=8, command=self.__trigger_force)
+        self.__horscaledownBtn.grid(row=2, column=8)
+        
         self.__acq_setup_name = tk.StringVar(self.master)
         self.__acq_setupEtr = tk.Entry(self.__frame_saving, width=36, textvariable=self.__acq_setup_name)
         self.__acq_setupEtr.grid(row=3, column=3, columnspan=5, padx=3)
@@ -546,7 +553,7 @@ class SSMBWindow(tk.Frame):
         self.__rawdata_saveBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__rawdata_save)
         self.__rawdata_saveBtn.grid(row=6, column=8, padx=3)
         
-        tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=7, column=0)
+        #tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=7, column=0)
         
         self.__logging_path = tk.StringVar(self.master)
         self.__logging_pathEtr = tk.Entry(self.__frame_saving, width=35, textvariable=self.__logging_path)
@@ -1049,6 +1056,22 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to shift scope trace, but the program backend has not started!')
     
+    def __trigger_sequence(self):
+        try:
+            if self.__trigseq:
+                self._ctrl.control_queue.put(['normtrig'])
+            else:
+                self._ctrl.control_queue.put(['seqtrig'])
+        except AttributeError:
+            print('Warning: Tried to switch sequence trigger, but the program backend has not started!')
+            
+    def __trigger_force(self):
+        try:
+            self._ctrl.control_queue.put(['force'])
+        except AttributeError:
+            print('Warning: Tried to force trigger, but the program backend has not started!')
+        
+    
     
     def main_loop(self):
         while self._ctrl.status_queue.qsize(): # iterate as long as there are status items to get
@@ -1064,7 +1087,7 @@ class SSMBWindow(tk.Frame):
             self.master.after(10, self.main_loop) # restart the loop (we cannot wait for new data within a Queue.get() as this would block the GUI thread)
     
 
-    def refresh_acquisition(self, acqstate, acqnumber, savestatus, displaystatus, seqlen = None):
+    def refresh_acquisition(self, acqstate, acqnumber, savestatus, displaystatus, triggermode, seqlen = None):
         self.__acq_sequencenum.set(acqnumber)
         self.__acqstate = acqstate
         if acqstate == 'RUN':
@@ -1085,6 +1108,12 @@ class SSMBWindow(tk.Frame):
             self.__rawdata_saveBtn.configure(text='Stop', bg=self.__color_btngreen, activebackground=self.__color_btngreen)
         else:
             self.__rawdata_saveBtn.configure(text='Start', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            
+        self.__trigseq = triggermode
+        if triggermode:
+            self.__trigseqBtn.configure(text='Sequence', bg=self.__color_btnyellow, activebackground=self.__color_btnyellpw)
+        else:
+            self.__trigseqBtn.configure(text='Normal', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         
         self.__harm1shown = displaystatus[self.__column_harm1]
         if self.__harm1shown:
