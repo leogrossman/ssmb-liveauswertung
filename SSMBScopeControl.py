@@ -99,8 +99,8 @@ class SSMBScopeControl:
         sys.path.append('python_vxi11-0.9-py3.6.egg')
         from vxi11 import Instrument
         self.scope = Instrument(scopeip)
-        self.channels = ["CH%d" % (i+1) for i in range(4)] # warning: self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
-        self.maths = ["MATH%d" % (i+1) for i in range(2)]
+        self.channels = ["CH%d" % (i+1) for i in range(4)] # Warning: self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
+        self.maths = ["MATH%d" % (i+1) for i in range(2)]  #TODO what is the point of this hardcoded configuration?? -> is used for periodic queries... But why in this way?
         self.__averaginglength = {math: 20 for math in self.maths}
         self.dataranges = None # start with no ranges specified to get full data trace
         self.go = False
@@ -558,11 +558,19 @@ class SSMBScopeControl:
     
     def get_display_status(self):
         chs = {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
-        chs.update({math: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + math + ":STATE?"))) for math in self.maths})
+        try:
+            chs.update({math: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + math + ":STATE?"))) for math in self.maths})
+        except: #TODO specify error type?
+            print('Warning: failed to get math channel info, not configured?')
+            chs.update({math: False for math in self.maths})
         return chs
     
     def get_math_averaging_length(self):
-        return {math: int(self.scope.ask("MATH:" + math + ":AVG:WEIGHT?")) for math in self.maths}
+        try:
+            return {math: int(self.scope.ask("MATH:" + math + ":AVG:WEIGHT?")) for math in self.maths}
+        except: #TODO specify error type?
+            print('Warning: failed to get math channel info, not configured?')
+            return {math: 0 for math in self.maths}
     
     def configure_averaging(self, averaginglength_dict):
         self.__averaginglength.update(averaginglength_dict)
@@ -571,19 +579,25 @@ class SSMBScopeControl:
         """
         configures averaging length of selected ``maths`` and shows them on the scope screen.
         """
-        for math in maths:
-            self.scope.write('DISPLAY:GLOBAL:' + math + ':STATE ON')
-            self.scope.write('MATH:' + math + ':AVG:MODE ON')
-            self.scope.write(format_command('MATH:' + math + ':AVG:WEIGHT', self.__averaginglength[math], form='%d'))
-            # the description in the programmer's manual for the :AVG:WEIGHT command is a bit confusing, but it actually seems to be a number of averages
+        try:
+            for math in maths:
+                self.scope.write('DISPLAY:GLOBAL:' + math + ':STATE ON')
+                self.scope.write('MATH:' + math + ':AVG:MODE ON')
+                self.scope.write(format_command('MATH:' + math + ':AVG:WEIGHT', self.__averaginglength[math], form='%d'))
+                # the description in the programmer's manual for the :AVG:WEIGHT command is a bit confusing, but it actually seems to be a number of averages
+        except: #TODO specify error type?
+            print('Warning: failed to activate math channel, not configured?')
     
     def hide_averaging(self, *maths):
         """
         hides selected ``maths`` on the scope screen.
         """
-        for math in maths:
-            self.scope.write('DISPLAY:GLOBAL:' + math + ':STATE OFF')
-    
+        try:
+            for math in maths:
+                self.scope.write('DISPLAY:GLOBAL:' + math + ':STATE OFF')
+        except: #TODO specify error type?
+            print('Warning: failed to hide math channel, not configured?')
+
     def enable_display(self, *channels):
         """
         enables display of selected ``channels`` on the scope screen.
@@ -620,8 +634,12 @@ class SSMBScopeControl:
                 channel = 'MATH:' + channel
             currentscale = float(self.scope.ask("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE?"))
             if currentscale < LARGEST_SCALE:
-                print('SCOPE: increase scale, channel', channel)
-                self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE", larger_scale(currentscale)))
+                try:
+                    self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE", larger_scale(currentscale)))
+                    print('SCOPE: increase scale, channel', channel)
+                except: #TODO specify error type?
+                    print(f'Warning: failed to scale channel {channel}, not configured?')
+
         
     def decrease_scale(self, *channels):
         """
@@ -632,8 +650,11 @@ class SSMBScopeControl:
                 channel = 'MATH:' + channel
             currentscale = float(self.scope.ask("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE?"))
             if currentscale > SMALLEST_SCALE:
-                print('SCOPE: decrease scale, channel', channel)
-                self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE", smaller_scale(currentscale)))
+                try:
+                    self.scope.write(format_command("DISPLAY:WAVEView1:" + channel + ":VERTICAL:SCALE", smaller_scale(currentscale)))
+                    print('SCOPE: decrease scale, channel', channel)
+                except: #TODO specify error type?
+                    print(f'Warning: failed to scale channel {channel}, not configured?')
                 
     def increase_horiztonal_scale(self):
         """
