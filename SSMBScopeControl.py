@@ -82,9 +82,9 @@ def smaller_horizontal_scale(scale):
 
 class SSMBScopeControl:
     
-    def __init__(self, scopeip, data_queue, maxvalue_queue, autoset_time=False):
+    def __init__(self, scopeip, data_queue, maxvalue_queue, active_channels=['CH1', 'CH2', 'CH3', 'CH4'], active_maths=['MATH1', 'MATH2'], autoset_time=False):
         """
-        Opens a vxi11 connection to the scope at ``scopeip`` and readys the scope control loop in a new thread. Communication via three queues:
+        Opens a vxi11 connection to the scope at ``scopeip`` and readys the scope control loop in a new thread. Communication via four queues:
          --control_queue: send commands for the scope here in the form ['command', (arguments, ...)] (queue item must be a *list*).
          --status_queue: returns the acquisition status of the scope as (acqstate, acqnumber, savestatus [, self.get_sequence_length])
          --data_queue: here the acquired data is output, in the form (date, data).
@@ -94,13 +94,19 @@ class SSMBScopeControl:
         ----------
         scopeip : string
             IP address of the scope that should be connected with.
+        data_queue, maxvalue_queue : Queue
+            supply theses queues (see above)
+        active_channels, active_maths : list[string]
+            active channel and math names to be queried from the scope
+        autoset_time : bool
+            whether to automatically update scope system time on startup
 
         """
         sys.path.append('python_vxi11-0.9-py3.6.egg')
         from vxi11 import Instrument
         self.scope = Instrument(scopeip)
-        self.channels = ["CH%d" % (i+1) for i in range(4)] # Warning: self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
-        self.maths = ["MATH%d" % (i+1) for i in range(2)]  #TODO what is the point of this hardcoded configuration?? -> is used for periodic queries... But why in this way?
+        self.channels = sorted(active_channels) # self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
+        self.maths = sorted(active_maths)
         self.__averaginglength = {math: 20 for math in self.maths}
         self.dataranges = None # start with no ranges specified to get full data trace
         self.go = False
@@ -555,6 +561,9 @@ class SSMBScopeControl:
     def get_data_saving_name(self):
         savename = self.scope.ask("SAVEON:FILE:NAME?").strip('"')
         return savename
+    
+    def get_channel_status(self):
+        return {channel: bool(int(self.scope.ask("SELECT:" + channel + "?"))) for channel in self.channels}
     
     def get_display_status(self):
         chs = {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
