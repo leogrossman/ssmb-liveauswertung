@@ -1,4 +1,7 @@
-'''Adapted from:
+'''
+Arnold Kruschinski 2026-02-04
+
+Adapted from:
 
 # wfm reader proof-of-concept
 # https://www.tek.com/sample-license
@@ -12,21 +15,28 @@
 '''
 
 import struct
-import numpy as np # http://www.numpy.org/
+import numpy as np
 import pandas as pd
-
-import SSMBTraceAnalyzerUtilities as util
 
 class WfmReadError(Exception):
     """error for unexpected things"""
     pass
+
+def extractChannelNameFromDataFilename(filename): # works only for .wfm files where the channel name is included automatically 
+    chname = filename.split(".")[-2].split("_")[-1]
+    try:
+        int(chname) # if final_string is an integer, channel name is at second-to-last position (timestring is at last)
+        chname = filename.split(".")[-2].split("_")[-2]
+    except ValueError:
+        pass # if final_string is not an integer, channel name is at last position
+    return chname.upper()
 
 def read_single_channel_core(filepath):
     '''
     core method for reading a single channel .wfm file and converting to pandas Series, extracting column name from filename. Returns the data Series, tstart, tstep.
     '''
     wfm, tstart, tstep, tfrac_array, tdatefrac_array, tdate_array = read_wfm_core(filepath)
-    wfm_series = pd.Series(wfm, name=util.extractChannelNameFromDataFilename(filepath))
+    wfm_series = pd.Series(wfm, name=extractChannelNameFromDataFilename(filepath))
     return wfm_series, tstart, tstep
     
 def read_single_channel(filepath, timecolumnname='TIME'):
