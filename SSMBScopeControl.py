@@ -82,7 +82,7 @@ def smaller_horizontal_scale(scale):
 
 class SSMBScopeControl:
     
-    def __init__(self, scopeip, data_queue, maxvalue_queue, active_channels=['CH1', 'CH2', 'CH3', 'CH4'], active_maths=['MATH1', 'MATH2'], autoset_time=False):
+    def __init__(self, scopeip, data_queue, maxvalue_queue, active_channels=['CH1', 'CH2', 'CH3', 'CH4'], active_maths=['MATH1', 'MATH2'], timename='TIME', autoset_time=False):
         """
         Opens a vxi11 connection to the scope at ``scopeip`` and readys the scope control loop in a new thread. Communication via four queues:
          --control_queue: send commands for the scope here in the form ['command', (arguments, ...)] (queue item must be a *list*).
@@ -96,8 +96,10 @@ class SSMBScopeControl:
             IP address of the scope that should be connected with.
         data_queue, maxvalue_queue : Queue
             supply theses queues (see above)
-        active_channels, active_maths : list[string]
+        active_channels, active_maths : list[str]
             active channel and math names to be queried from the scope
+        timename : str
+            name of time column in generated data tables
         autoset_time : bool
             whether to automatically update scope system time on startup
 
@@ -107,6 +109,7 @@ class SSMBScopeControl:
         self.scope = Instrument(scopeip)
         self.channels = sorted(active_channels) # self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
         self.maths = sorted(active_maths)
+        self.timename = timename
         self.__averaginglength = {math: 20 for math in self.maths}
         self.dataranges = None # start with no ranges specified to get full data trace
         self.go = False
@@ -460,7 +463,7 @@ class SSMBScopeControl:
 
     def get_data(self):
         """
-        Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: 'TIME', [channel names as given in channel list].
+        Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: self.timename, [self.channels].
         """
         def decodebinary(binary, datawidth):
             k = 0
@@ -481,15 +484,15 @@ class SSMBScopeControl:
                     channeldatalist.append(singlechanneldataraw)
             return channeldatalist
         
-        def transferall(reclen, datawidth):
+        def transferall(reclen, datawidth, transferred_channels):
             self.scope.write('DATA:START 1')
             self.scope.write('DATA:STOP %d' % reclen)
             binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
             channeldatalist = decodebinary(binary, datawidth)
-            channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = self.channels)
+            channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = transferred_channels)
             return channeldf
         
-        # TODO do we need to do the setup commands every time?
+        active_channels = [channel for channel in self.channels if self.get_channel_status(channel)]
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
         self.scope.write('DATA:SOURCE ' + ','.join(self.channels))
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
@@ -501,11 +504,11 @@ class SSMBScopeControl:
         xscale = float(self.scope.ask("WFMOutpre:XINCR?"))
         
         if self.dataranges is None: # no ranges specified, transfer full trace
-            channeldf = transferall(reclen, datawidth)
+            channeldf = transferall(reclen, datawidth, active_channels)
         
         else: # transfer partial data as given in self.dataranges
             try:
-                channeldf = pd.DataFrame(np.zeros((reclen,len(self.channels))), columns=self.channels) # setup DataFrame initialized with zeros
+                channeldf = pd.DataFrame(np.zeros((reclen,len(active_channels))), columns=active_channels) # setup DataFrame initialized with zeros
                 for datarange in self.dataranges: # iteration over individual ranges
                     # dataranges are specified in TIME, convert to sample indices
                     # add 1 because DATA:START/STOP range from 1 to reclen
@@ -526,12 +529,12 @@ class SSMBScopeControl:
                     
             except AssertionError:
                 print('Error: Limits for partial scope data transfer are out of bounds! Defaulting to transfering full trace')
-                channeldf = transferall(reclen, datawidth)
+                channeldf = transferall(reclen, datawidth, active_channels)
         
-        vertscales  = np.array([self.scope.ask(ch+":SCALE?") for ch in self.channels]).astype(float)
-        vertposns   = np.array([self.scope.ask(ch+":POS?") for ch in self.channels]).astype(float)
+        vertscales  = np.array([self.scope.ask(ch+":SCALE?") for ch in active_channels]).astype(float)
+        vertposns   = np.array([self.scope.ask(ch+":POS?") for ch in active_channels]).astype(float)
         scaleddf = (channeldf / 2**(datawidth*8) * 10 - 5 - vertposns) * vertscales
-        timeaxis = pd.Series((channeldf.index - xoffset) * xscale, name='TIME')
+        timeaxis = pd.Series((channeldf.index - xoffset) * xscale, name=self.timename)
         return pd.concat((timeaxis, scaleddf), axis='columns')
     
     def start_data_saving(self, path, filename, savebinary=True, saveimage=False):
@@ -562,8 +565,8 @@ class SSMBScopeControl:
         savename = self.scope.ask("SAVEON:FILE:NAME?").strip('"')
         return savename
     
-    def get_channel_status(self):
-        return {channel: bool(int(self.scope.ask("SELECT:" + channel + "?"))) for channel in self.channels}
+    def get_channel_status(self, channel):
+        return bool(int(self.scope.ask("SELECT:" + channel + "?")))
     
     def get_display_status(self):
         chs = {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
