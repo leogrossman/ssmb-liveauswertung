@@ -245,15 +245,9 @@ class SSMBScopeControl:
                 try:
                     data = self.get_data()
                     self.__data_queue.put((date, data))
-                except:
-                    print('Warning: There was an error trying to read data from the scope.')
-                    try:
-                        data = self.get_data()
-                        self.__data_queue.put((date, data))
-                        print('Retry successful.')
-                    except Exception as e:
-                        print('Retry failed. Message:')
-                        print(type(e), e)
+                except Exception as e:
+                    print('Warning: There was an error trying to read data from the scope. Message:')
+                    print(type(e), e)
                 i = 0 # check for acqusition status immediately after the wait caused by acquiring data!
             
             # then check acquisition status, saving status, display status, trigger status
@@ -494,7 +488,7 @@ class SSMBScopeControl:
         
         active_channels = [channel for channel in self.channels if self.get_channel_status(channel)]
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
-        self.scope.write('DATA:SOURCE ' + ','.join(self.channels))
+        self.scope.write('DATA:SOURCE ' + ','.join(active_channels))
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
         datawidth = int(self.scope.ask('DATA:WIDTH?')) # number of bytes for each data point
         
@@ -567,6 +561,7 @@ class SSMBScopeControl:
     
     def get_channel_status(self, channel):
         return bool(int(self.scope.ask("SELECT:" + channel + "?")))
+        #TODO this is not the right command! It will also return False if the channel is active but display is off.
     
     def get_display_status(self):
         chs = {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}

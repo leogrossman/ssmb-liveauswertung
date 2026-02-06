@@ -139,8 +139,12 @@ class SSMBPlotting:
                         for peak, peakturn in zip(peaks, turns):
                             if peakturn-1 == turn:
                                 plt.axvline(windowstart+centerpeak_pos+peak*2, color='r', ls='--')
-                    plt.plot(traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C3' if harm==2 else 'C1')
-                    plt.plot(traceanalyzer.get_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C2' if harm==2 else 'C0', alpha=0.8)
+                    try:
+                        plt.plot(traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C3' if harm==2 else 'C1')
+                        plt.plot(traceanalyzer.get_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C2' if harm==2 else 'C0', alpha=0.8)
+                    except TypeError:
+                        # is thrown if no data exists (trying to index None)
+                        pass # just don't plot anything
                     plt.ylabel('corrected signal / V')
                     plt.xlabel('time / ns')
                     plt.grid()

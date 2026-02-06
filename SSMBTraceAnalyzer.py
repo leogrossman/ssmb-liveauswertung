@@ -410,9 +410,13 @@ class TraceAnalyzer:
                         raise RuntimeError("background fit failed for the first turn due to insufficient data points")
         
     def get_bg_corrected_trace(self, turn = 0, harmonic = 1):
-        if harmonic == 2:
-            return self.bgcorrectedtraces2[turn]
-        return self.bgcorrectedtraces1[turn]
+        if self.harmonic_exists(harmonic):
+            if harmonic == 2:
+                return self.bgcorrectedtraces2[turn]
+            else:
+                return self.bgcorrectedtraces1[turn]
+        else:
+            return None
     
         
     def do_averaging(self, tracecache):
@@ -452,9 +456,13 @@ class TraceAnalyzer:
                     self.bgaveragetraces1 = bgavgtraces
         
     def get_averaged_bg_corrected_trace(self, turn = 0, harmonic = 1):
-        if harmonic == 2:
-            return self.bgaveragetraces2[turn]   
-        return self.bgaveragetraces1[turn]
+        if self.harmonic_exists(harmonic):
+            if harmonic == 2:
+                return self.bgaveragetraces2[turn]
+            else:
+                return self.bgaveragetraces1[turn]
+        else:
+            return None
     
     def get_laser_maximum(self, minimum_signal = 0.03):
         """
