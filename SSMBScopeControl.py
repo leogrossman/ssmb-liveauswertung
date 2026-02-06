@@ -358,7 +358,7 @@ class SSMBScopeControl:
         """
         numacq = self.get_num_acq()
         try:
-            numacqchanged = numacq != self.lastnumacq
+            numacqchanged = numacq > self.lastnumacq
         except:
             numacqchanged = False
         self.lastnumacq = numacq

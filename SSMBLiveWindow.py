@@ -867,6 +867,10 @@ class SSMBWindow(tk.Frame):
     
     def __center2manu(self, statechange = True):
         self.__config_centerposmode = 'manual'
+        try:
+            self.__config_centerpos.get()
+        except:
+            self.__center2center(statechange=False)
         self.__config_centerautoBtn.configure(bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         self.__config_centerfixBtn.configure(bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         self.__config_centermanuBtn.configure(bg=self.__color_btngreen, activebackground=self.__color_btngreen)
@@ -876,9 +880,11 @@ class SSMBWindow(tk.Frame):
         if statechange:
             self.__update_centerpos(event=None)
     
-    def __center2center(self):
+    def __center2center(self, statechange = True):
         self.__config_centerpos.set(self.__config_winwidth.get()/2)
-        self.__update_centerpos(event=None)
+        # statechange == False is used to only update the interface, in that case only the mode and buttons are changed.
+        if statechange:
+            self.__update_centerpos(event=None)
     
     
     def __scale_select_harm1(self):
@@ -1124,7 +1130,7 @@ class SSMBWindow(tk.Frame):
             
         self.__trigseq = triggermode
         if triggermode:
-            self.__trigseqBtn.configure(text='Sequence', bg=self.__color_btnyellow, activebackground=self.__color_btnyellpw)
+            self.__trigseqBtn.configure(text='Sequence', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
         else:
             self.__trigseqBtn.configure(text='Normal', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         
