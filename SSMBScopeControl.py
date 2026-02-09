@@ -486,7 +486,7 @@ class SSMBScopeControl:
             channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = transferred_channels)
             return channeldf
         
-        active_channels = [channel for channel in self.channels if self.get_channel_status(channel)]
+        active_channels = self.get_active_channels()
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
         self.scope.write('DATA:SOURCE ' + ','.join(active_channels))
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
@@ -559,9 +559,9 @@ class SSMBScopeControl:
         savename = self.scope.ask("SAVEON:FILE:NAME?").strip('"')
         return savename
     
-    def get_channel_status(self, channel):
-        return bool(int(self.scope.ask("SELECT:" + channel + "?")))
-        #TODO this is not the right command! It will also return False if the channel is active but display is off.
+    def get_active_channels(self):
+        allactiveset = set(self.scope.ask('DATA:SOURCE:AVAILABLE?').upper().split(','))
+        return sorted(list(allactiveset.intersection(set(self.channels))))
     
     def get_display_status(self):
         chs = {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
