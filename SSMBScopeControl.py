@@ -563,21 +563,17 @@ class SSMBScopeControl:
         allactiveset = set(self.scope.ask('DATA:SOURCE:AVAILABLE?').upper().split(','))
         return sorted(list(allactiveset.intersection(set(self.channels))))
     
+    def get_active_maths(self):
+        allactiveset = set(self.scope.ask('MATH:LIST?').upper().split(','))
+        return sorted(list(allactiveset.intersection(set(self.maths))))
+    
     def get_display_status(self):
         chs = {channel: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + channel + ":STATE?"))) for channel in self.channels}
-        try:
-            chs.update({math: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + math + ":STATE?"))) for math in self.maths})
-        except: #TODO specify error type?
-            print('Warning: failed to get math channel info, not configured?')
-            chs.update({math: False for math in self.maths})
+        chs.update({math: bool(int(self.scope.ask("DISPLAY:GLOBAL:" + math + ":STATE?"))) for math in self.get_active_maths()})
         return chs
     
     def get_math_averaging_length(self):
-        try:
-            return {math: int(self.scope.ask("MATH:" + math + ":AVG:WEIGHT?")) for math in self.maths}
-        except: #TODO specify error type?
-            print('Warning: failed to get math channel info, not configured?')
-            return {math: 0 for math in self.maths}
+        return {math: int(self.scope.ask("MATH:" + math + ":AVG:WEIGHT?")) for math in self.get_active_maths()}
     
     def configure_averaging(self, averaginglength_dict):
         self.__averaginglength.update(averaginglength_dict)

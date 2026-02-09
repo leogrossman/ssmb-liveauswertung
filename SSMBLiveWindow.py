@@ -751,11 +751,11 @@ class SSMBWindow(tk.Frame):
                 self.shutdown()
     
     def __config_set_focus_cache(self, event):
-		# save the current value of the calling element (to be called at focus in)
+        # save the current value of the calling element (to be called at focus in)
         self.__config_focus_cache = event.widget.get()
         
     def __config_retrieve_focus_cache(self, event):
-		# reset the value of the calling element to the cached value (to be called at focus out)
+        # reset the value of the calling element to the cached value (to be called at focus out)
         event.widget.delete(0, tk.END)
         event.widget.insert(0, self.__config_focus_cache)
     
@@ -1146,17 +1146,25 @@ class SSMBWindow(tk.Frame):
         else:
             self.__harm2showBtn.configure(text='Trace hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
         
-        self.__math1shown = displaystatus[self.__column_math1]
-        if self.__math1shown:
-            self.__math1showBtn.configure(text='Avg. shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        else:
-            self.__math1showBtn.configure(text='Avg. hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        try:
+            self.__math1shown = displaystatus[self.__column_math1]
+            if self.__math1shown:
+                self.__math1showBtn.configure(text='Avg. shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            else:
+                self.__math1showBtn.configure(text='Avg. hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        except KeyError:
+            self.__math1shown = False
+            self.__math1showBtn.configure(text='Avg. missing', bg=self.__color_btnred, activebackground=self.__color_btnred)
         
-        self.__math2shown = displaystatus[self.__column_math2]
-        if self.__math2shown:
-            self.__math2showBtn.configure(text='Avg. shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
-        else:
-            self.__math2showBtn.configure(text='Avg. hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        try:
+            self.__math2shown = displaystatus[self.__column_math2]
+            if self.__math2shown:
+                self.__math2showBtn.configure(text='Avg. shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            else:
+                self.__math2showBtn.configure(text='Avg. hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        except KeyError:
+            self.__math2shown = False
+            self.__math2showBtn.configure(text='Avg. missing', bg=self.__color_btnred, activebackground=self.__color_btnred)
         
         if seqlen is not None:
             self.__acq_sequencelen.set(seqlen)
