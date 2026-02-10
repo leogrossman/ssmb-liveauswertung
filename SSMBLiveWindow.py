@@ -200,12 +200,17 @@ class SSMBWindow(tk.Frame):
         self.__harm1controlselectBtn = tk.Button(self.__frame_harm1, text='Trace', width=3, command=self.__scale_select_harm1)
         self.__harm1controlselectBtn.grid(row=0, column=9, rowspan=2)
         
-        tk.Label(self.__frame_harm1, text='Avg. length', bg=self.__color_harm1).grid(row=4, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='Scope display\navg. length', bg=self.__color_harm1).grid(row=4, column=8, columnspan=2, sticky=tk.S)
         self.__math1avlen = tk.IntVar(self.master, value=0)
         self.__math1avlenEtr = tk.Entry(self.__frame_harm1, width=10, textvariable = self.__math1avlen, validate = 'all', validatecommand = self.__int_validate_callback)
         self.__math1avlenEtr.bind('<Return>', self.__math1_config)
         self.__math1avlenEtr.bind('<KP_Enter>', self.__math1_config)
         self.__math1avlenEtr.grid(row=5, column=8, columnspan=2, sticky=tk.N)
+        self.__math1avlenrdbk = tk.IntVar(self.master, value=0)
+        self.__math1avlenrdbkEtr = tk.Entry(self.__frame_harm1, width=10, textvariable = self.__math1avlenrdbk, state='readonly')
+        self.__math1avlenrdbkEtr.grid(row=6, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm1, text='(readback)', bg=self.__color_harm1).grid(row=7, column=8, columnspan=2, sticky=tk.N)
+
         
         self.__harm2autoscale = False
         tk.Label(self.__frame_harm2, text='Scope: Vertical Scale', bg=self.__color_harm2).grid(row=0, column=0, columnspan=3, rowspan=2, sticky=tk.E)
@@ -240,6 +245,10 @@ class SSMBWindow(tk.Frame):
         self.__math2avlenEtr.bind('<Return>', self.__math2_config)
         self.__math2avlenEtr.bind('<KP_Enter>', self.__math2_config)
         self.__math2avlenEtr.grid(row=5, column=8, columnspan=2, sticky=tk.N)
+        self.__math2avlenrdbk = tk.IntVar(self.master, value=0)
+        self.__math2avlenrdbkEtr = tk.Entry(self.__frame_harm2, width=10, textvariable = self.__math2avlenrdbk, state='readonly')
+        self.__math2avlenrdbkEtr.grid(row=6, column=8, columnspan=2, sticky=tk.S)
+        tk.Label(self.__frame_harm2, text='(readback)', bg=self.__color_harm2).grid(row=7, column=8, columnspan=2, sticky=tk.N)
         
         ### Turn and peak selection boxes for first harmonic ###
         tk.Label(self.__frame_harm1, text='peak marker #1', bg=self.__color_harm1, relief=tk.GROOVE).grid(row=9, column=1, columnspan=2)
@@ -1106,7 +1115,7 @@ class SSMBWindow(tk.Frame):
             self.master.after(10, self.main_loop) # restart the loop (we cannot wait for new data within a Queue.get() as this would block the GUI thread)
     
 
-    def refresh_acquisition(self, acqstate, acqnumber, savestatus, displaystatus, triggermode, seqlen = None):
+    def refresh_acquisition(self, acqstate, acqnumber, savestatus, displaystatus, triggermode, mathavglen, seqlen = None):
         self.__acq_sequencenum.set(acqnumber)
         self.__acqstate = acqstate
         if acqstate == 'RUN':
@@ -1157,6 +1166,16 @@ class SSMBWindow(tk.Frame):
             self.__math2showBtn.configure(text='Avg. shown', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
         else:
             self.__math2showBtn.configure(text='Avg. hidden', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+            
+        try:
+            self.__math1avlenrdbk.set(mathavglen[self.__column_math1])
+        except KeyError:
+            self.__math1avlenrdbk.set(0)
+        
+        try:
+            self.__math2avlenrdbk.set(mathavglen[self.__column_math2])
+        except KeyError:
+            self.__math2avlenrdbk.set(0)
         
         if seqlen is not None:
             self.__acq_sequencelen.set(seqlen)
