@@ -10,6 +10,7 @@ Created on Thu Jun  2 13:49:09 2022
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+import numpy as np
 plt.rcParams.update({'font.size': 8})
 
 class SSMBPlotting:
@@ -114,10 +115,10 @@ class SSMBPlotting:
                     skipping = 1
                 #skipping=2
                 try:
-                    ax2.plot(traceanalyzer.trace[timecolumn].loc[::skipping]*1e9, traceanalyzer.trace[triggercolumn].loc[::skipping], 'grey')
+                    ax2.plot(np.array(traceanalyzer.trace[timecolumn])[::skipping]*1e9, np.array(traceanalyzer.trace[triggercolumn])[::skipping], 'grey')
                 except KeyError:
                     pass # missing trigger trace, skip it
-                ax1.plot(traceanalyzer.trace[timecolumn].loc[::skipping]*1e9, traceanalyzer.trace[harm2column if harm==2 else harm1column].loc[::skipping], 'C2' if harm==2 else 'C0', alpha=0.8)
+                ax1.plot(np.array(traceanalyzer.trace[timecolumn])[::skipping]*1e9, np.array(traceanalyzer.trace[harm2column if harm==2 else harm1column])[::skipping], 'C2' if harm==2 else 'C0', alpha=0.8)
                 ax1.set_zorder(1)
                 ax1.patch.set_visible(False)
                 ax1.set_ylabel('raw signal / V')
@@ -140,8 +141,8 @@ class SSMBPlotting:
                             if peakturn-1 == turn:
                                 plt.axvline(windowstart+centerpeak_pos+peak*2, color='r', ls='--')
                     try:
-                        plt.plot(traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C3' if harm==2 else 'C1')
-                        plt.plot(traceanalyzer.get_bg_corrected_trace(turn, harm)[timecolumn]*1e9, traceanalyzer.get_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column], 'C2' if harm==2 else 'C0', alpha=0.8)
+                        plt.plot(np.array(traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[timecolumn])*1e9, np.array(traceanalyzer.get_averaged_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column]), 'C3' if harm==2 else 'C1')
+                        plt.plot(np.array(traceanalyzer.get_bg_corrected_trace(turn, harm)[timecolumn])*1e9, np.array(traceanalyzer.get_bg_corrected_trace(turn, harm)[harm2column if harm==2 else harm1column]), 'C2' if harm==2 else 'C0', alpha=0.8)
                     except TypeError:
                         # is thrown if no data exists (trying to index None)
                         pass # just don't plot anything
