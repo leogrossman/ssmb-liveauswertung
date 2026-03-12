@@ -495,8 +495,6 @@ class SSMBScopeControl:
         reclen = int(self.scope.ask('HOR:MODE:RecordLength?'))
         datawidth = int(self.scope.ask('DATA:WIDTH?')) # number of bytes for each data point
         
-        self.scope.write('DATA:START 1')
-        self.scope.write('DATA:STOP %d' % reclen)
         xoffset = int(self.scope.ask("WFMOutpre:PT_Off?")) # caution: this is relative to DATA:START -> which should thus be set to 1 before this query is sent
         xscale = float(self.scope.ask("WFMOutpre:XINCR?"))
         
