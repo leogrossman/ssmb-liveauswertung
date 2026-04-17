@@ -505,10 +505,10 @@ class SSMBWindow(tk.Frame):
         self.__acq_sequencelenEtr.grid(row=1, column=6, sticky=tk.W)
         self.__acq_sequencenum = tk.IntVar(self.master, value=10)
         self.__acq_sequencenumEtr = tk.Entry(self.__frame_saving, width=8, textvariable = self.__acq_sequencenum, justify='right', validate = 'all', validatecommand = self.__int_validate_callback, state='readonly')
-        self.__acq_sequencenumEtr.grid(row=1, column=8, sticky=tk.W)
+        self.__acq_sequencenumEtr.grid(row=1, column=9, sticky=tk.W)
         
         tk.Label(self.__frame_saving, text='length', bg=self.__color_saving).grid(row=1, column=5, sticky=tk.E)
-        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=1, column=7, sticky=tk.E)
+        tk.Label(self.__frame_saving, text='Acqusition no.', bg=self.__color_saving).grid(row=1, column=7, columnspan=2, sticky=tk.E)
         
         tk.Label(self.__frame_saving, text='Horizontal scale', bg=self.__color_saving).grid(row=2, column=0, sticky=tk.E)
         self.__horscaleupBtn = tk.Button(self.__frame_saving, text='zoom out', width=5, command=self.__scale_hor_inc)
@@ -522,19 +522,22 @@ class SSMBWindow(tk.Frame):
         self.__horshiftrightBtn.grid(row=2, column=4)
         
         self.__trigseq = False
-        tk.Label(self.__frame_saving, text='Trigger:', bg=self.__color_saving).grid(row=2, column=5, columnspan=2, sticky=tk.E)
+        tk.Label(self.__frame_saving, text='Trigger:', bg=self.__color_saving).grid(row=2, column=5, sticky=tk.E)
         self.__trigseqBtn = tk.Button(self.__frame_saving, text='Normal', width=8, command=self.__trigger_sequence)
-        self.__trigseqBtn.grid(row=2, column=7)
-        self.__horscaledownBtn = tk.Button(self.__frame_saving, text='Force!', width=8, command=self.__trigger_force)
-        self.__horscaledownBtn.grid(row=2, column=8)
+        self.__trigseqBtn.grid(row=2, column=6, columnspan=2)
+        self.__trigslope = 0
+        self.__trigslopeBtn = tk.Button(self.__frame_saving, text='B either', width=5, command=self.__trigger_switch_slope, bg=self.__color_btnred, activebackground=self.__color_btnred, state='disabled')
+        self.__trigslopeBtn.grid(row=2, column=8)
+        self.__trigforceBtn = tk.Button(self.__frame_saving, text='Force!', width=8, command=self.__trigger_force)
+        self.__trigforceBtn.grid(row=2, column=9)
         
         self.__acq_setup_name = tk.StringVar(self.master)
         self.__acq_setupEtr = tk.Entry(self.__frame_saving, width=36, textvariable=self.__acq_setup_name)
-        self.__acq_setupEtr.grid(row=3, column=3, columnspan=5, padx=3)
+        self.__acq_setupEtr.grid(row=3, column=3, columnspan=6, padx=3)
         tk.Label(self.__frame_saving, text='setup file path on scope', bg=self.__color_saving).grid(row=3, column=0, columnspan=3, sticky=tk.E)
         
         self.__acq_load_setupBtn = tk.Button(self.__frame_saving, text='Load setup', width=8, command=self.__acq_load_setup)
-        self.__acq_load_setupBtn.grid(row=3, column=8, padx=3)
+        self.__acq_load_setupBtn.grid(row=3, column=9, padx=3)
         
         
         ### Data saving panel ###
@@ -547,7 +550,7 @@ class SSMBWindow(tk.Frame):
         self.__rawdata_browseBtn.grid(row=6, column=3, columnspan=2, padx=3)
         self.__rawdata_name = tk.StringVar(self.master)
         self.__rawdata_nameEtr = tk.Entry(self.__frame_saving, width=22, textvariable=self.__rawdata_name)
-        self.__rawdata_nameEtr.grid(row=6, column=5, columnspan=3, padx=3)
+        self.__rawdata_nameEtr.grid(row=6, column=5, columnspan=4, padx=3)
         
         #TODO how can we get the info on number of saved files??
         # self.__rawdata_numsaved = tk.IntVar(self.master, value=0)
@@ -557,10 +560,10 @@ class SSMBWindow(tk.Frame):
         tk.Label(self.__frame_saving, text='Save raw data', bg=self.__color_saving, relief=tk.RAISED).grid(row=5, column=0, sticky=tk.W)        
         #tk.Label(self.__frame_saving, text='saved traces', bg=self.__color_saving).grid(row=7, column=6, padx=3, sticky=tk.W)
         tk.Label(self.__frame_saving, text='path to folder', bg=self.__color_saving).grid(row=7, column=0, sticky=tk.W)
-        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=7, column=5, columnspan=4, sticky=tk.W)
+        tk.Label(self.__frame_saving, text='file name', bg=self.__color_saving).grid(row=7, column=5, columnspan=5, sticky=tk.W)
         
         self.__rawdata_saveBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__rawdata_save)
-        self.__rawdata_saveBtn.grid(row=6, column=8, padx=3)
+        self.__rawdata_saveBtn.grid(row=6, column=9, padx=3)
         
         #tk.Label(self.__frame_saving, text='', bg=self.__color_saving, height=1).grid(row=7, column=0)
         
@@ -583,10 +586,10 @@ class SSMBWindow(tk.Frame):
         self.__logging_startstopBtn = tk.Button(self.__frame_saving, text='Start', width=8, command=self.__logging_startstop)
         self.__logging_startstopBtn.grid(row=9, column=1, columnspan=2, padx=3)
         self.__logging_clearBtn = tk.Button(self.__frame_saving, text='Clear', width=8, command=self.__logging_clear)
-        self.__logging_clearBtn.grid(row=9, column=8)
+        self.__logging_clearBtn.grid(row=9, column=9)
         
         self.__logging_saveBtn = tk.Button(self.__frame_saving, text='Save logged data', width=20, command=self.__logging_save)
-        self.__logging_saveBtn.grid(row=10, column=5, columnspan=3, padx=3, sticky=tk.W)
+        self.__logging_saveBtn.grid(row=10, column=5, columnspan=4, padx=3, sticky=tk.W)
 
         ### register window closing protocol ###
         self.master.protocol("WM_DELETE_WINDOW", self.close)
@@ -1099,7 +1102,14 @@ class SSMBWindow(tk.Frame):
         except AttributeError:
             print('Warning: Tried to force trigger, but the program backend has not started!')
         
-    
+    def __trigger_switch_slope(self):
+        try:
+            if self.__trigslope > 0:
+                self._ctrl.control_queue.put(['trigbfall'])
+            else:
+                self._ctrl.control_queue.put(['trigbrise'])
+        except AttributeError:
+            print('Warning: Tried to switch trigger slope, but the program backend has not started!')
     
     def main_loop(self):
         while self._ctrl.status_queue.qsize(): # iterate as long as there are status items to get
@@ -1115,7 +1125,7 @@ class SSMBWindow(tk.Frame):
             self.master.after(10, self.main_loop) # restart the loop (we cannot wait for new data within a Queue.get() as this would block the GUI thread)
     
 
-    def refresh_acquisition(self, acqstate, acqnumber, savestatus, displaystatus, triggermode, mathavglen, seqlen = None):
+    def refresh_acquisition(self, acqstate, acqnumber, savestatus, displaystatus, triggermode, triggerflank, mathavglen, seqlen = None):
         self.__acq_sequencenum.set(acqnumber)
         self.__acqstate = acqstate
         if acqstate == 'RUN':
@@ -1140,8 +1150,18 @@ class SSMBWindow(tk.Frame):
         self.__trigseq = triggermode
         if triggermode:
             self.__trigseqBtn.configure(text='Sequence', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+            self.__trigslopeBtn.configure(state='normal')
         else:
             self.__trigseqBtn.configure(text='Normal', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+            self.__trigslopeBtn.configure(state='disabled')
+        
+        self.__trigslope = triggerflank
+        if triggerflank > 0:
+            self.__trigslopeBtn.configure(text='B rise', bg=self.__color_btndefault, activebackground=self.__color_btndefault)
+        elif triggerflank < 0:
+            self.__trigslopeBtn.configure(text='B fall', bg=self.__color_btnyellow, activebackground=self.__color_btnyellow)
+        else:
+            self.__trigslopeBtn.configure(text='B either', bg=self.__color_btnred, activebackground=self.__color_btnred)
         
         self.__harm1shown = displaystatus[self.__column_harm1]
         if self.__harm1shown:

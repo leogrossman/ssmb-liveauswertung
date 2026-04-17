@@ -141,6 +141,7 @@ class SSMBScopeControl:
         savestatus = None
         displaystatus = None
         triggerstatus = None
+        triggerflank = None
         mathavglen = None
         checkseqlen = False
         scalelen = 20
@@ -171,6 +172,10 @@ class SSMBScopeControl:
                         self.sequence_trigger()
                     elif command == 'normtrig':
                         self.edge_trigger()
+                    elif command == 'trigbrise':
+                        self.set_trigger_b_flank_rise()
+                    elif command == 'trigbfall':
+                        self.set_trigger_b_flank_fall()
                     elif command == 'dataranges':
                         self.set_dataranges(*arguments)
                     elif command == 'savestart':
@@ -259,18 +264,20 @@ class SSMBScopeControl:
                 savestatus_new = self.get_data_saving_status()
                 displaystatus_new = self.get_display_status()
                 triggerstatus_new = self.get_trigger_mode()
+                triggerflank_new = self.get_trigger_b_flank()
                 mathavglen_new = self.get_math_averaging_length()
-                if acqstate != acqstate_new or acqnumber != acqnumber_new or savestatus != savestatus_new or displaystatus != displaystatus_new or triggerstatus != triggerstatus_new or mathavglen != mathavglen_new or checkseqlen:
+                if acqstate != acqstate_new or acqnumber != acqnumber_new or savestatus != savestatus_new or displaystatus != displaystatus_new or triggerstatus != triggerstatus_new or triggerflank != triggerflank_new or mathavglen != mathavglen_new or checkseqlen:
                     if checkseqlen or acqstate_new == 'SEQUENCE': # also update sequence length when new sequence was started (could have been changed and started on the scope)
-                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, triggerstatus_new, mathavglen_new, self.get_sequence_length()])
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, triggerstatus_new, triggerflank_new, mathavglen_new, self.get_sequence_length()])
                         checkseqlen = False
                     else:
-                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, triggerstatus_new, mathavglen_new])
+                        self.status_queue.put([acqstate_new, acqnumber_new, savestatus_new, displaystatus_new, triggerstatus_new, triggerflank_new, mathavglen_new])
                     acqstate = acqstate_new
                     acqnumber = acqnumber_new
                     savestatus = savestatus_new
                     displaystatus = displaystatus_new
                     triggerstatus = triggerstatus_new
+                    triggerflank = triggerflank_new
                     mathavglen = mathavglen_new
             else:
                 i -= 1
@@ -435,6 +442,27 @@ class SSMBScopeControl:
         returns True for sequence trigger mode, false for standard trigger mode
         """
         return bool(int(self.scope.ask('TRIG:B:STATE?')))
+    
+    def set_trigger_b_flank_rise(self):
+        """
+        sets flank mode for the B trigger to rising
+        """
+        self.scope.write('TRIG:B:EDGE:SLOPE RISE')
+    
+    def set_trigger_b_flank_fall(self):
+        """
+        sets flank mode for the B trigger to falling
+        """
+        self.scope.write('TRIG:B:EDGE:SLOPE FALL')
+    
+    def get_trigger_b_flank(self):
+        """
+        returns flank mode for the B trigger (-1: falling, +1: rising, 0: either)
+        """
+        flank = self.scope.ask('TRIG:B:EDGE:SLOPE?')
+        if flank.upper() == 'RISE': return 1
+        if flank.upper() == 'FALL': return -1
+        else: return 0
         
     def get_clipping_status(self):
         """
