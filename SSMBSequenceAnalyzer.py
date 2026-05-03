@@ -22,7 +22,7 @@ class SequenceAnalyzer:
                  windowcenter:float = 0., windowwidth:float = 20., centerpeak_pos:str = 'automatic', harm_for_auto_centerpeak:int = 1, turn_for_auto_centerpeak:int = 1,
                  plot:bool = False, plotmax:int = 20, plot_all_chunks:bool = True, plotfolder:str = 'Testplots/',
                  timecolumn_name:str = "TIME", harm1column_name:str = "CH3", harm2column_name:str = "CH4", lasercolumn_name:str = "CH1",
-                 invertharm1:bool = False, invertharm2:bool = False, invertlaser:bool = False, laser_threshold:float = 0.03, chunk_gap:int = 5):
+                 invertharm1:bool = False, invertharm2:bool = False, invertlaser:bool = False, laser_threshold:float = 0.03, chunk_gap:int = 5, ignore_first_sample_of_chunk:bool=False):
         #centerpeak_pos can be 
         #float for manual postitioning NOT at the window center (time in nanoseconds relative to window START)
         #or str:
@@ -52,6 +52,8 @@ class SequenceAnalyzer:
         self.reset_sequence()
         self.prev_horizontal_info = (0,0,0)
         self.prev_datetime = datetime(1970,1,1)
+        self.reset_on_next_sample = False
+        self.ignore_first_sample_of_chunk = ignore_first_sample_of_chunk
         self.chunk_index = -1 # should start with zero, but will be incremented for the first data trace as the time comparison will fail
         
         self.plot = plot
@@ -276,8 +278,18 @@ class SequenceAnalyzer:
         else:
             currentdatetime = datetime.now()
         
+        if currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
+            self.reset_on_next_sample = True
+            if self.ignore_first_sample_of_chunk:
+                self.prev_horizontal_info = currenttrace.get_horizontal_info()
+                self.prev_datetime = currentdatetime
+                print("Skipped dataset at", date_time, filepath)
+                print("because: first sample of new chunk")
+                return False
+        
         # compare the horizontal axis of the current and last dataset. If there is a differece, we cannot correlate the time axis and have to restart averaging and centerpeak determination, if active.
-        if not currenttrace.compare_horizontal_info(*self.prev_horizontal_info) or currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
+        if not currenttrace.compare_horizontal_info(*self.prev_horizontal_info) or self.reset_on_next_sample:
+            self.reset_on_next_sample = False
             # reset the averaging, reset the automatic centerpeak position and increment the chunk_index,
             # if either the horizontal scale has changed or the last trace is more than X seconds old
             self.averagecache = ([],[])            
@@ -288,8 +300,11 @@ class SequenceAnalyzer:
             self.chunk_index += 1
             if self.plot_all_chunks:
                 self.plot_index = 0   # restart plotting
+            
+        
         self.prev_horizontal_info = currenttrace.get_horizontal_info()
         self.prev_datetime = currentdatetime
+        
         
         # Perform averaging on the data with the previous datasets from the cache
         currenttrace.do_averaging(self.averagecache)
