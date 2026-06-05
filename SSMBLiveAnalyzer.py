@@ -11,14 +11,14 @@ import queue
 from SSMBSequenceAnalyzer import SequenceAnalyzer
 
 class SSMBLiveAnalyzer:
-    def __init__(self, epics, logging=False, maxvalue_turn_harm1 = 1, maxvalue_turn_harm2 = 1, **initialparameters):
+    def __init__(self, epics, logging=False, maxvalue_turn_harm1 = 1, maxvalue_turn_harm2 = 1, chunk_watch_PVs = [], **initialparameters):
         self.data_queue = queue.Queue() # new queue for feeding raw data from the scope control module
-        self.__PV = epics.PV            # reference to the epics access module (passed here with initialization)
+        self.__epics = epics            # reference to the epics access module (passed here with initialization)
         self.__analyzer = SequenceAnalyzer(**initialparameters)  # initialize SequenceAnalyzer with starting parameters
         self.parameter_queue = queue.Queue()  # new queue to input new parameters from the main window
+        self.__epics.set_analysis_command_queue(self.paramater_queue)
         self.result_queue = queue.LifoQueue() # new queue to output evaluated data to the main window (Lifo: always use newest data, display will be slower than evaluation)
         self.maxvalue_queue = queue.Queue()   # new queue to output evaluated max peak heights for scope scale adjustment
-        self.__epics_queue = epics.data_queue # get queue to output evaluated data to the epics access module (passed here with initialization)
         self.go = False
         self.logging = logging
         self.__thread = threading.Thread(target=self.__analysis_loop) # new thread for data evaluation
@@ -30,21 +30,26 @@ class SSMBLiveAnalyzer:
             self.__maxvalue_turn_harm2 = maxvalue_turn_harm2 - 1
         else:
             self.__maxvalue_turn_harm2 = 0
+        self.__chunk_watch_PVs = chunk_watch_PVs
         
     def start(self):
         self.go = True
         self.__thread.start()
+        for chunk_watch_PV in self.__chunk_watch_PVs:
+            self.__epics.register_callback(chunk_watch_PV)
     
     def stop(self):
         self.go = False
+        self.__epics.clear_callbacks()
         
     def get_parameters(self):
         return self.__analyzer.get_parameters()
         
     def __analysis_loop(self):
         '''
-        Main loop to be called in a new thread, evaluating data in the data_queue and outputting the result into result_queue and __epics_queue.
+        Main loop to be called in a new thread, evaluating data in the data_queue and outputting the result into result_queue and the epics queue.
         '''
+        force_new_chunk = False
         while self.go:
             ### check for new parameter change commands in the parameter queue ###
             while self.parameter_queue.qsize(): # iterate as long as there are items to get
@@ -70,6 +75,8 @@ class SSMBLiveAnalyzer:
                         self.__analyzer.save_peakdata_to_hdf(*arguments)
                     elif command == 'reset':
                         self.__analyzer.reset_sequence()
+                    elif command == 'new_chunk':
+                        force_new_chunk = True
                 except (TypeError, ValueError) as e:
                     print(f'Error: SSMBLiveAnalyzer: Invalid parameter change command "{command}", {arguments}. Error message:')
                     print(type(e), e)
@@ -79,10 +86,11 @@ class SSMBLiveAnalyzer:
             ### once all commands are completed, start checking for new data ###
             try:
                 date, data = self.data_queue.get(timeout = 0.1)
-                if self.__analyzer.next_analysis(data = data, date_time = date, log_peakdata = self.logging, frf=self.__PV.get_frf()):
+                if self.__analyzer.next_analysis(data = data, date_time = date, log_peakdata = self.logging, frf=self.__epics.PV.get_frf(), force_new_chunk=force_new_chunk):
                     # next_analysis returns True on success, only then export new results to queue
                     self.result_queue.put((self.__analyzer.get_current_trace_analysis(), self.__analyzer.get_current_peakdata(), self.__analyzer.get_centerpeak_pos(), self.__analyzer.get_peakdata_length()))
-                    self.__epics_queue.put(self.__analyzer.get_current_peakdata())
+                    self.__epics.data_queue.put(self.__analyzer.get_current_peakdata())
                     self.maxvalue_queue.put((self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=1, turn=self.__maxvalue_turn_harm1), self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=2, turn=self.__maxvalue_turn_harm2)))
+                force_new_chunk = False # in any case, reset force_new_chunk, this has been applied.
             except queue.Empty:
                 pass # no new data, continue

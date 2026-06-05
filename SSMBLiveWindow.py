@@ -660,15 +660,28 @@ class SSMBWindow(tk.Frame):
                 print('Information: SSMBSequenceAnalyzer parameter "%s" not in configuration file "%s"' % (parametername, self.__cfg_name))
             except ValueError:
                 print('Warning: SSMBSequenceAnalyzer parameter "%s" with invalid value in configuration file "%s"' % (parametername, self.__cfg_name))
+
+        ### read turn for autoscale parameters:
         for hi in [1,2]:
             parametername = f'turn_for_autoscale_harm{hi}'
             parameterlabel = f'maxvalue_turn_harm{hi}'
             try:
                 parameters.update({parameterlabel: int(self._cfg[self.__cfg_key][parametername])})
             except KeyError:
-                print('Information: SSMBSequenceAnalyzer parameter "%s" not in configuration file "%s"' % (parametername, self.__cfg_name))
+                print('Information: SSMBLiveAnalyzer parameter "%s" not in configuration file "%s"' % (parametername, self.__cfg_name))
             except ValueError:
-                print('Warning: SSMBSequenceAnalyzer parameter "%s" with invalid value in configuration file "%s"' % (parametername, self.__cfg_name))
+                print('Warning: SSMBLiveAnalyzer parameter "%s" with invalid value in configuration file "%s"' % (parametername, self.__cfg_name))
+
+        ### read chunk restart watch PVs:
+        parametername = 'chunk_watch_pvs'
+        parameterlabel = 'chunk_watch_PVs'
+        try:
+            parameters.update({parameterlabel: self._cfg[self.__cfg_key][parametername].split(',')})
+        except KeyError:
+            print('Information: SSMBLiveAnalyzer parameter "%s" not in configuration file "%s"' % (parametername, self.__cfg_name))
+        except ValueError:
+            print('Warning: SSMBLiveAnalyzer parameter "%s" with invalid value in configuration file "%s"' % (parametername, self.__cfg_name))
+
         ### initialize data analysis module ###
         self._analyzer = SSMBLiveAnalyzer.SSMBLiveAnalyzer(self._epics, self.__logging_status, **parameters)
         print('done.')

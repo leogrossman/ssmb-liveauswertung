@@ -188,7 +188,11 @@ class SSMBEpics:
         self.data_queue = queue.Queue() # create queue for data input to be written to EPICS
         self.set_turn_parameters(harm1turns, harm1peaks, harm2turns, harm2peaks)
         self.go = False
+        self.__callbacks = []
         self.__thread = threading.Thread(target=self.__pv_loop)
+
+    def set_analysis_command_queue(analysis_command_queue):
+        self.__analysis_command_queue = analysis_command_queue
         
     def start(self):
         self.go = True
@@ -196,6 +200,24 @@ class SSMBEpics:
     
     def stop(self):
         self.go = False
+
+    def __callback_function(self, **kwargs):
+        try:
+            self.__analysis_command_queue.put(['new_chunk'])
+        except AttributeError:
+            print('Information: callback on PV change could not be processed, no reference to Analyzer parameter queue')
+
+    def register_callback(self, PVname):
+        try:
+            self.__callbacks.append(PV(PVname, callback=self.__callback_function))
+            print(f'Registered chunk watch callback for PV "{PVname}".')
+        except:
+            print(f'Warning: did not add chunk watch callback for PV "{PVname}" (there was an error).')
+
+    def clear_callbacks(self):
+        for callback_PV in self.__callbacks:
+            callback_PV.remove_callback()
+        self.__callbacks = []
     
     def set_turn_parameters(self, harm1turns, harm1peaks, harm2turns, harm2peaks):
         self.harm1turns = harm1turns

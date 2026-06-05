@@ -231,7 +231,7 @@ class SequenceAnalyzer:
         
     
 ############################################################################
-    def next_analysis(self, data=None, filepath=None, date_time=None, log_peakdata=True, frf=None):
+    def next_analysis(self, data=None, filepath=None, date_time=None, log_peakdata=True, frf=None, force_new_chunk=False):
         """
         do the next file analysis and append the result to peakdata.
         
@@ -278,7 +278,7 @@ class SequenceAnalyzer:
         else:
             currentdatetime = datetime.now()
         
-        if currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance):
+        if currentdatetime-self.prev_datetime > timedelta(seconds=self.time_tolerance) or force_new_chunk:
             self.reset_on_next_sample = True
             if self.ignore_first_sample_of_chunk:
                 self.prev_horizontal_info = currenttrace.get_horizontal_info()
