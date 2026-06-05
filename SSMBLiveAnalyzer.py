@@ -16,7 +16,7 @@ class SSMBLiveAnalyzer:
         self.__epics = epics            # reference to the epics access module (passed here with initialization)
         self.__analyzer = SequenceAnalyzer(**initialparameters)  # initialize SequenceAnalyzer with starting parameters
         self.parameter_queue = queue.Queue()  # new queue to input new parameters from the main window
-        self.__epics.set_analysis_command_queue(self.paramater_queue)
+        self.__epics.set_analysis_command_queue(self.parameter_queue)
         self.result_queue = queue.LifoQueue() # new queue to output evaluated data to the main window (Lifo: always use newest data, display will be slower than evaluation)
         self.maxvalue_queue = queue.Queue()   # new queue to output evaluated max peak heights for scope scale adjustment
         self.go = False

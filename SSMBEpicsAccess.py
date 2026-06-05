@@ -191,7 +191,7 @@ class SSMBEpics:
         self.__callbacks = []
         self.__thread = threading.Thread(target=self.__pv_loop)
 
-    def set_analysis_command_queue(analysis_command_queue):
+    def set_analysis_command_queue(self, analysis_command_queue):
         self.__analysis_command_queue = analysis_command_queue
         
     def start(self):
