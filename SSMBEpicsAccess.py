@@ -104,8 +104,8 @@ class SSMBPVs:
             
             set_PV(self.pvlaserpos, peakdata, 'laser_position')
             set_PV(self.pvlasermax, peakdata, 'laser_maximum')
-            set_PV(self.pvavglen, peakdata, 'averaging_length_harm1') # TODO there are different avglens for harm1,2 in peakdata, can they really be different?
             set_PV(self.pvpeakpos, peakdata, 'centerpeak_pos')
+            set_PV(self.pvavglen, peakdata, 'averaging_length_harm1') # TODO there are different avglens for harm1,2 in peakdata, can they really be different?
             
     def update_turnparameters(self, harm1turns=[1,2,3], harm1peaks=[0,0,0], harm2turns=[1,2,3], harm2peaks=[0,0,0]):
         """
