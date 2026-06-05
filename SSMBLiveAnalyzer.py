@@ -11,7 +11,7 @@ import queue
 from SSMBSequenceAnalyzer import SequenceAnalyzer
 
 class SSMBLiveAnalyzer:
-    def __init__(self, epics, logging=False, **initialparameters):
+    def __init__(self, epics, logging=False, maxvalue_turn_harm1 = 1, maxvalue_turn_harm2 = 1, **initialparameters):
         self.data_queue = queue.Queue() # new queue for feeding raw data from the scope control module
         self.__PV = epics.PV            # reference to the epics access module (passed here with initialization)
         self.__analyzer = SequenceAnalyzer(**initialparameters)  # initialize SequenceAnalyzer with starting parameters
@@ -22,6 +22,14 @@ class SSMBLiveAnalyzer:
         self.go = False
         self.logging = logging
         self.__thread = threading.Thread(target=self.__analysis_loop) # new thread for data evaluation
+        if maxvalue_turn_harm1 > 0:
+            self.__maxvalue_turn_harm1 = maxvalue_turn_harm1 - 1
+        else:
+            self.__maxvalue_turn_harm1 = 0
+        if maxvalue_turn_harm2 > 0:
+            self.__maxvalue_turn_harm2 = maxvalue_turn_harm2 - 1
+        else:
+            self.__maxvalue_turn_harm2 = 0
         
     def start(self):
         self.go = True
@@ -75,6 +83,6 @@ class SSMBLiveAnalyzer:
                     # next_analysis returns True on success, only then export new results to queue
                     self.result_queue.put((self.__analyzer.get_current_trace_analysis(), self.__analyzer.get_current_peakdata(), self.__analyzer.get_centerpeak_pos(), self.__analyzer.get_peakdata_length()))
                     self.__epics_queue.put(self.__analyzer.get_current_peakdata())
-                    self.maxvalue_queue.put((self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=1), self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=2)))
+                    self.maxvalue_queue.put((self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=1, turn=self.__maxvalue_turn_harm1), self.__analyzer.get_current_trace_analysis().get_raw_max_peak(harmonic=2, turn=self.__maxvalue_turn_harm2)))
             except queue.Empty:
                 pass # no new data, continue
