@@ -508,19 +508,21 @@ class SSMBScopeControl:
         Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: self.timename, [self.channels].
         """
         def ask_curve():
-            # Read raw waveform bytes directly. Instrument.ask()/read() strips
-            # trailing CR/LF characters, which may be valid binary samples.
+            # Read waveform bytes directly. Instrument.read() strips trailing
+            # CR/LF characters, which may be valid binary samples.
             self.scope.write('CURVE?')
-            raw = self.scope.read_raw()
-            print('SCOPE DEBUG: raw CURVE? length =', len(raw))
-            print('SCOPE DEBUG: raw CURVE? final bytes =', repr(raw[-10:]))
-            return raw.decode('latin1')
+            return self.scope.read_raw().decode('latin1')
 
         def decodebinary(binary, datawidth):
             k = 0
             channeldatalist = []
             try:
                 while k<len(binary):
+                    if binary[k] in '\r\n':
+                        # SCPI terminators are legal only after all binary blocks.
+                        if binary[k:].strip('\r\n'):
+                            raise ValueError("Unexpected trailing data in CURVE? response at position %d: %r" % (k, binary[k:k+20]))
+                        break
                     if binary[k] == ';': # channels separated by ';', skip this char
                         k += 1
                     elif binary[k] == '#': # channel data length coded after '#'
@@ -547,8 +549,6 @@ class SSMBScopeControl:
             except Exception:
                 print('SCOPE DEBUG: Failed decoding CURVE? response')
                 print('SCOPE DEBUG: response length =', len(binary))
-                print('SCOPE DEBUG: response CR count =', binary.count('\r'))
-                print('SCOPE DEBUG: response LF count =', binary.count('\n'))
                 print('SCOPE DEBUG: parser position =', k)
                 print('SCOPE DEBUG: data width =', datawidth)
                 print('SCOPE DEBUG: decoded blocks =', len(channeldatalist))
