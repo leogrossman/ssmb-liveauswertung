@@ -6,6 +6,7 @@ Created on Mon May 23 13:50:05 2022
 """
 
 import sys
+import traceback
 import numpy as np
 import pandas as pd
 
@@ -259,6 +260,7 @@ class SSMBScopeControl:
                 except Exception as e:
                     print('Warning: There was an error trying to read data from the scope. Message:')
                     print(type(e), e)
+                    traceback.print_exc()
                 i = 0 # check for acqusition status immediately after the wait caused by acquiring data!
             
             # then check acquisition status, saving status, display status, trigger status
@@ -498,29 +500,61 @@ class SSMBScopeControl:
         def decodebinary(binary, datawidth):
             k = 0
             channeldatalist = []
-            while k<len(binary):
-                if binary[k] == ';': # channels separated by ';', skip this char
-                    k += 1
-                elif binary[k] == '#': # channel data length coded after '#'
-                    k += 1
-                    lx = int(binary[k]) # number of data length characters in first character after '#' (this is ASCII!)
-                    k += 1
-                    ly = int(binary[k:k+lx]) # data length (this is ASCII!)
-                    k += lx
-                    # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
-                    singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
-                                                                # \ this needs least significant byte first!
-                    k += ly
-                    channeldatalist.append(singlechanneldataraw)
+            try:
+                while k<len(binary):
+                    if binary[k] == ';': # channels separated by ';', skip this char
+                        k += 1
+                    elif binary[k] == '#': # channel data length coded after '#'
+                        k += 1
+                        if k >= len(binary):
+                            raise ValueError("Incomplete binary block header after '#'")
+                        lx = int(binary[k]) # number of data length characters in first character after '#' (this is ASCII!)
+                        k += 1
+                        if k+lx > len(binary):
+                            raise ValueError("Incomplete binary block length field")
+                        ly = int(binary[k:k+lx]) # data length (this is ASCII!)
+                        k += lx
+                        if ly % datawidth:
+                            raise ValueError("Binary block length is not divisible by DATA:WIDTH")
+                        if k+ly > len(binary):
+                            raise ValueError("Incomplete binary data block: expected %d bytes, received %d" % (ly, len(binary)-k))
+                        # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
+                        singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
+                                                                    # \ this needs least significant byte first!
+                        k += ly
+                        channeldatalist.append(singlechanneldataraw)
+                    else:
+                        raise ValueError("Unexpected character in CURVE? response at position %d: %r" % (k, binary[k]))
+            except Exception:
+                print('SCOPE DEBUG: Failed decoding CURVE? response')
+                print('SCOPE DEBUG: response length =', len(binary))
+                print('SCOPE DEBUG: parser position =', k)
+                print('SCOPE DEBUG: data width =', datawidth)
+                print('SCOPE DEBUG: decoded blocks =', len(channeldatalist))
+                print('SCOPE DEBUG: response start =', repr(binary[:80]))
+                print('SCOPE DEBUG: response end =', repr(binary[-80:]))
+                raise
             return channeldatalist
-        
+
         def transferall(reclen, datawidth, transferred_channels):
             self.scope.write('DATA:START 1')
             self.scope.write('DATA:STOP %d' % reclen)
-            binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
-            channeldatalist = decodebinary(binary, datawidth)
-            channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = transferred_channels)
-            return channeldf
+            for attempt in range(2):
+                try:
+                    binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
+                    channeldatalist = decodebinary(binary, datawidth)
+                    if len(channeldatalist) != len(transferred_channels):
+                        raise ValueError("Expected %d channel blocks, received %d" % (len(transferred_channels), len(channeldatalist)))
+                    channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = transferred_channels)
+                    return channeldf
+                except (IndexError, ValueError) as e:
+                    print('SCOPE DEBUG: CURVE? transfer attempt %d failed: %s' % (attempt+1, e))
+                    print('SCOPE DEBUG: record length =', reclen)
+                    print('SCOPE DEBUG: transferred channels =', transferred_channels)
+                    if attempt == 0:
+                        print('SCOPE DEBUG: retrying CURVE? transfer once')
+                    else:
+                        raise
         
         active_channels = self.get_active_channels()
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
