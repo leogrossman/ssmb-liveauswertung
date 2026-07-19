@@ -107,6 +107,11 @@ class SSMBScopeControl:
         sys.path.append('python_vxi11-0.9-py3.6.egg')
         from vxi11 import Instrument
         self.scope = Instrument(scopeip)
+        self.scope.timeout = 30
+        print(self.scope.timeout)
+        self.scope.open()
+        print(self.scope.client.sock.timeout)
+        
         self.channels = sorted(active_channels) # self.channels has to be in increasing order for the code to work! (It is never changed at the moment)
         self.maths = sorted(active_maths)
         self.timename = timename
