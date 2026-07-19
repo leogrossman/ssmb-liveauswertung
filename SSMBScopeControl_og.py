@@ -499,11 +499,7 @@ class SSMBScopeControl:
             k = 0
             channeldatalist = []
             while k<len(binary):
-                if binary[k] in '\r\n':
-                    # CURVE? may append a normal SCPI line terminator after the final binary block.
-                    # Only accept CR/LF here; any other unexpected byte is still treated as an error.
-                    k += 1
-                elif binary[k] == ';': # channels separated by ';', skip this char
+                if binary[k] == ';': # channels separated by ';', skip this char
                     k += 1
                 elif binary[k] == '#': # channel data length coded after '#'
                     k += 1
@@ -511,24 +507,17 @@ class SSMBScopeControl:
                     k += 1
                     ly = int(binary[k:k+lx]) # data length (this is ASCII!)
                     k += lx
-                    if len(binary)-k < ly:
-                        raise ValueError('Incomplete scope binary block: expected %d bytes, received %d' % (ly, len(binary)-k))
                     # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
                     singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
                                                                 # \ this needs least significant byte first!
                     k += ly
                     channeldatalist.append(singlechanneldataraw)
-                else:
-                    raise ValueError('Unexpected byte in scope binary response at position %d: %r' % (k, binary[k]))
             return channeldatalist
         
         def transferall(reclen, datawidth, transferred_channels):
             self.scope.write('DATA:START 1')
             self.scope.write('DATA:STOP %d' % reclen)
-            # Instrument.ask()/read() strips trailing CR/LF. For binary waveform data,
-            # those byte values can be valid samples, so read the response unchanged.
-            self.scope.write('CURVE?')
-            binary = self.scope.read_raw().decode('latin1')
+            binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
             channeldatalist = decodebinary(binary, datawidth)
             channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = transferred_channels)
             return channeldf
@@ -562,10 +551,7 @@ class SSMBScopeControl:
                     # get data:
                     self.scope.write('DATA:START %d' % datastart)
                     self.scope.write('DATA:STOP %d' % datastop)
-                    # Instrument.ask()/read() strips trailing CR/LF. For binary waveform data,
-                    # those byte values can be valid samples, so read the response unchanged.
-                    self.scope.write('CURVE?')
-                    binary = self.scope.read_raw().decode('latin1')
+                    binary = self.scope.ask('CURVE?', encoding='latin1') # get binary scope data record
                     channeldatalist = decodebinary(binary, datawidth)
                     
                     # insert into DataFrame:

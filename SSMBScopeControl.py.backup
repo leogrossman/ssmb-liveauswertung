@@ -6,6 +6,7 @@ Created on Mon May 23 13:50:05 2022
 """
 
 import sys
+import traceback
 import numpy as np
 import pandas as pd
 
@@ -118,7 +119,7 @@ class SSMBScopeControl:
         self.__averaginglength = {math: 20 for math in self.maths}
         self.dataranges = None # start with no ranges specified to get full data trace
         self.go = False
-        self.__thread = threading.Thread(target=self.__control_loop)
+        self.__thread = threading.Thread(target=self.__control_loop, daemon=True)
         self.control_queue = queue.Queue()
         self.status_queue = queue.Queue()
         self.__data_queue = data_queue
@@ -135,9 +136,19 @@ class SSMBScopeControl:
         
     def stop(self):
         """
-        Start the scope control loop.
+        Stop the scope control loop and close the scope connection.
         """
         self.go = False
+        try:
+            self.control_queue.put_nowait(['quit'])
+        except Exception:
+            pass
+        if self.__thread.is_alive() and threading.current_thread() is not self.__thread:
+            self.__thread.join(timeout=2)
+        try:
+            self.scope.close()
+        except Exception:
+            pass
         
     def __control_loop(self):
         i=0
@@ -259,6 +270,7 @@ class SSMBScopeControl:
                 except Exception as e:
                     print('Warning: There was an error trying to read data from the scope. Message:')
                     print(type(e), e)
+                    traceback.print_exc()
                 i = 0 # check for acqusition status immediately after the wait caused by acquiring data!
             
             # then check acquisition status, saving status, display status, trigger status
@@ -495,43 +507,75 @@ class SSMBScopeControl:
         """
         Returns the data from the last acquisition frame from the scope as a pandas DataFrame with columns: self.timename, [self.channels].
         """
+        def ask_curve():
+            # Read raw waveform bytes directly. Instrument.ask()/read() strips
+            # trailing CR/LF characters, which may be valid binary samples.
+            self.scope.write('CURVE?')
+            raw = self.scope.read_raw()
+            print('SCOPE DEBUG: raw CURVE? length =', len(raw))
+            print('SCOPE DEBUG: raw CURVE? final bytes =', repr(raw[-10:]))
+            return raw.decode('latin1')
+
         def decodebinary(binary, datawidth):
             k = 0
             channeldatalist = []
-            while k<len(binary):
-                if binary[k] in '\r\n':
-                    # CURVE? may append a normal SCPI line terminator after the final binary block.
-                    # Only accept CR/LF here; any other unexpected byte is still treated as an error.
-                    k += 1
-                elif binary[k] == ';': # channels separated by ';', skip this char
-                    k += 1
-                elif binary[k] == '#': # channel data length coded after '#'
-                    k += 1
-                    lx = int(binary[k]) # number of data length characters in first character after '#' (this is ASCII!)
-                    k += 1
-                    ly = int(binary[k:k+lx]) # data length (this is ASCII!)
-                    k += lx
-                    if len(binary)-k < ly:
-                        raise ValueError('Incomplete scope binary block: expected %d bytes, received %d' % (ly, len(binary)-k))
-                    # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
-                    singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
-                                                                # \ this needs least significant byte first!
-                    k += ly
-                    channeldatalist.append(singlechanneldataraw)
-                else:
-                    raise ValueError('Unexpected byte in scope binary response at position %d: %r' % (k, binary[k]))
+            try:
+                while k<len(binary):
+                    if binary[k] == ';': # channels separated by ';', skip this char
+                        k += 1
+                    elif binary[k] == '#': # channel data length coded after '#'
+                        k += 1
+                        if k >= len(binary):
+                            raise ValueError("Incomplete binary block header after '#'")
+                        lx = int(binary[k]) # number of data length characters in first character after '#' (this is ASCII!)
+                        k += 1
+                        if k+lx > len(binary):
+                            raise ValueError("Incomplete binary block length field")
+                        ly = int(binary[k:k+lx]) # data length (this is ASCII!)
+                        k += lx
+                        if ly % datawidth:
+                            raise ValueError("Binary block length is not divisible by DATA:WIDTH")
+                        if k+ly > len(binary):
+                            raise ValueError("Incomplete binary data block: expected %d bytes, received %d" % (ly, len(binary)-k))
+                        # After this, read ly bytes of binary data (unsigned int, LSB first) for the current channel:
+                        singlechanneldataraw = [sum([ord(binary[j+i])<<(8*i) for i in range(datawidth)]) for j in range(k, k+ly, datawidth)]
+                                                                    # \ this needs least significant byte first!
+                        k += ly
+                        channeldatalist.append(singlechanneldataraw)
+                    else:
+                        raise ValueError("Unexpected character in CURVE? response at position %d: %r" % (k, binary[k]))
+            except Exception:
+                print('SCOPE DEBUG: Failed decoding CURVE? response')
+                print('SCOPE DEBUG: response length =', len(binary))
+                print('SCOPE DEBUG: response CR count =', binary.count('\r'))
+                print('SCOPE DEBUG: response LF count =', binary.count('\n'))
+                print('SCOPE DEBUG: parser position =', k)
+                print('SCOPE DEBUG: data width =', datawidth)
+                print('SCOPE DEBUG: decoded blocks =', len(channeldatalist))
+                print('SCOPE DEBUG: response start =', repr(binary[:80]))
+                print('SCOPE DEBUG: response end =', repr(binary[-80:]))
+                raise
             return channeldatalist
-        
+
         def transferall(reclen, datawidth, transferred_channels):
             self.scope.write('DATA:START 1')
             self.scope.write('DATA:STOP %d' % reclen)
-            # Instrument.ask()/read() strips trailing CR/LF. For binary waveform data,
-            # those byte values can be valid samples, so read the response unchanged.
-            self.scope.write('CURVE?')
-            binary = self.scope.read_raw().decode('latin1')
-            channeldatalist = decodebinary(binary, datawidth)
-            channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = transferred_channels)
-            return channeldf
+            for attempt in range(2):
+                try:
+                    binary = ask_curve() # get binary scope data record without stripping valid CR/LF bytes
+                    channeldatalist = decodebinary(binary, datawidth)
+                    if len(channeldatalist) != len(transferred_channels):
+                        raise ValueError("Expected %d channel blocks, received %d" % (len(transferred_channels), len(channeldatalist)))
+                    channeldf = pd.DataFrame(np.array(channeldatalist).transpose(), columns = transferred_channels)
+                    return channeldf
+                except (IndexError, ValueError) as e:
+                    print('SCOPE DEBUG: CURVE? transfer attempt %d failed: %s' % (attempt+1, e))
+                    print('SCOPE DEBUG: record length =', reclen)
+                    print('SCOPE DEBUG: transferred channels =', transferred_channels)
+                    if attempt == 0:
+                        print('SCOPE DEBUG: retrying CURVE? transfer once')
+                    else:
+                        raise
         
         active_channels = self.get_active_channels()
         self.scope.write('DATA:ENC SRP') # unsigned int binary, LSB first
@@ -562,10 +606,7 @@ class SSMBScopeControl:
                     # get data:
                     self.scope.write('DATA:START %d' % datastart)
                     self.scope.write('DATA:STOP %d' % datastop)
-                    # Instrument.ask()/read() strips trailing CR/LF. For binary waveform data,
-                    # those byte values can be valid samples, so read the response unchanged.
-                    self.scope.write('CURVE?')
-                    binary = self.scope.read_raw().decode('latin1')
+                    binary = ask_curve() # get binary scope data record without stripping valid CR/LF bytes
                     channeldatalist = decodebinary(binary, datawidth)
                     
                     # insert into DataFrame:
